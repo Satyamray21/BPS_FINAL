@@ -31,7 +31,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
-import { addExpenses, getAllExpenses } from '../../../features/expense/expenseSlice';
+import { addExpenses, getAllExpenses,updateByInvoiceNo,viewedExpenseById,clearViewedExpenses} from '../../../features/expense/expenseSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 
@@ -55,6 +55,15 @@ const ExpensesCard = () => {
     useEffect(() => {
         dispatch(getAllExpenses())
     }, [dispatch])
+    useEffect(()=>{
+        if(invoiceNo)
+        {
+            dispatch(viewedExpenseById(invoiceNo));
+        }
+        return ()=>{
+            dispatch(clearViewedExpenses)
+        }
+    },[invoiceNo,dispatch]);
     const filteredExpenses = expenses.filter(exp =>
         exp.name.toLowerCase().includes(searchExpense.toLowerCase())
     );
