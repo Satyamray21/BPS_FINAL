@@ -70,6 +70,7 @@ export const createDriver = asyncHandler(async (req, res) => {
         pincode,
         isBlacklisted: isBlacklisted === "true" || isBlacklisted === true,
         isAvailable: isAvailable === "true" || isAvailable === true,
+        createdBy: req.user._id,
     });
 
    
@@ -78,41 +79,41 @@ export const createDriver = asyncHandler(async (req, res) => {
 
 // Get All Drivers (Formatted forntend data )
 export const getAllDrivers = asyncHandler(async (req, res) => {
-    const drivers = await Driver.find();
+    const drivers = await Driver.find( req.roleQueryFilter);
     const driverList = formatDriverList(drivers);
     return res.status(200).json(new ApiResponse(200, "All drivers fetched successfully", driverList));
 });
 
 // Get Available Drivers (Formatted data)
 export const getAvailableDrivers = asyncHandler(async (req, res) => {
-    const drivers = await Driver.find({ isAvailable: true, isBlacklisted: false });
+    const drivers = await Driver.find({... req.roleQueryFilter, isAvailable: true, isBlacklisted: false });
     const driverList = formatDriverList(drivers);
     return res.status(200).json(new ApiResponse(200, "Available drivers fetched successfully", driverList));
 });
 
 // Get Blacklisted Drivers (Formatted)
 export const getBlacklistedDrivers = asyncHandler(async (req, res) => {
-    const drivers = await Driver.find({ isBlacklisted: true });
+    const drivers = await Driver.find({... req.roleQueryFilter, isBlacklisted: true });
     const driverList = formatDriverList(drivers);
     return res.status(200).json(new ApiResponse(200, "Blacklisted drivers fetched successfully", driverList));
 });
 
 // Get Total Drivers Count
 export const getTotalDriversCount = asyncHandler(async (req, res) => {
-    const totalDrivers = await Driver.countDocuments();
+    const totalDrivers = await Driver.countDocuments(req.roleQueryFilter);
     return res.status(200).json(new ApiResponse(200, "Total drivers count fetched", totalDrivers));
 });
 
 
 // Get Available Drivers Count
 export const getAvailableDriversCount = asyncHandler(async (req, res) => {
-    const count = await Driver.countDocuments({ isAvailable: true, isBlacklisted: false });
+    const count = await Driver.countDocuments({ ... req.roleQueryFilter,isAvailable: true, isBlacklisted: false });
     return res.status(200).json(new ApiResponse(200, "Available drivers count fetched", count));
 });
 
 // Get Blacklisted Drivers Count
 export const getBlacklistedDriversCount = asyncHandler(async (req, res) => {
-    const count = await Driver.countDocuments({ isBlacklisted: true });
+    const count = await Driver.countDocuments({ ... req.roleQueryFilter,isBlacklisted: true });
     return res.status(200).json(new ApiResponse(200, "Blacklisted drivers count fetched", count));
 });
 
@@ -199,12 +200,12 @@ export const updateDriverStatus = asyncHandler(async (req, res) => {
 });
 
 export const getDeactivedDrivers = asyncHandler(async (req, res) => {
-    const drivers = await Driver.find({ isDeactived:true });
+    const drivers = await Driver.find({ ... req.roleQueryFilter,isDeactived:true });
     const driverList = formatDriverList(drivers);
     return res.status(200).json(new ApiResponse(200, "Deactived drivers fetched successfully", driverList));
 });
 export const getDeactivedDriversCount = asyncHandler(async (req, res) => {
-    const count = await Driver.countDocuments({ isDeactived: true });
+    const count = await Driver.countDocuments({... req.roleQueryFilter, isDeactived: true });
     return res.status(200).json(new ApiResponse(200, "Deactived drivers count fetched", count));
 });
 

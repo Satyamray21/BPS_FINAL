@@ -80,7 +80,12 @@ const driverSchema = new mongoose.Schema({
     isDeactived: {
         type: Boolean,
         default: false
-    }
+    },
+    createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
     
 }, { timestamps: true });
 

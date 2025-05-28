@@ -9,7 +9,12 @@ const ledgerHistorySchema = new mongoose.Schema({
  additionalStatement:
  {
   type:String
- }
+ },
+ createdBy: {
+         type: mongoose.Schema.Types.ObjectId,
+         ref: "User",
+         required: true,
+       },
 },{timestamps:true});
 
 const CustomerLedgerHistory = mongoose.model("CustomerLedgerHistory", ledgerHistorySchema);

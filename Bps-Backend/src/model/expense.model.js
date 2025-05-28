@@ -11,6 +11,11 @@ const expenseSchema = new mongoose.Schema(
     taxAmount: { type: Number, required: true },
     totalAmount: { type: Number, required: true },
     document: { type: String,required:true },
+    createdBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+          },
   },
   { timestamps: true }
 );

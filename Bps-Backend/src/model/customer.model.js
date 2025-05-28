@@ -66,7 +66,12 @@ const customerSchema = new mongoose.Schema({
     isBlacklisted: {
         type: Boolean,
         default: false
-    }
+    },
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
 
 }, { timestamps: true });
 

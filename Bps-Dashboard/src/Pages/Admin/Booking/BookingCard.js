@@ -39,7 +39,7 @@ import {
 } from "@mui/icons-material";
 import AddIcon from "@mui/icons-material/Add";
 import { useDispatch, useSelector } from 'react-redux';
-import { bookingRequestCount, activeBookingCount, cancelledBookingCount, fetchBookingsByType, cancelBooking, deleteBooking, revenueList } from '../../../features/booking/bookingSlice'
+import { bookingRequestCount, activeBookingCount, cancelledBookingCount, fetchBookingsByType, cancelBooking, deleteBooking, revenueList ,sendWhatsAppMsg,sendEmail} from '../../../features/booking/bookingSlice'
 import SendIcon from '@mui/icons-material/Send';
 
 
@@ -141,7 +141,10 @@ const BookingCard = () => {
     if (route) navigate(route);
   };
 
-
+  const handleShare = (bookingId)=>{
+    dispatch(sendWhatsAppMsg(bookingId));
+    dispatch(sendEmail(bookingId));
+  }
   const handleRequestSort = (property) => {
     const isAsc = orderBy === property && order === "asc";
     setOrder(isAsc ? "desc" : "asc");
@@ -466,6 +469,7 @@ const BookingCard = () => {
                               size="small"
                               color="primary"
                               title="share"
+                              onClick={()=>handleShare(row.bookingId)}
                             >
                               <SendIcon fontSize="small" />
                             </IconButton>

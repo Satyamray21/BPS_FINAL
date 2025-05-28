@@ -19,8 +19,7 @@ const formatCustomerList = (customers) => {
 
 // CREATE Customer
 export const createCustomer = asyncHandler(async (req, res) => {
-  console.log("Req files", req.files);
-  console.log("Req body", req.body);
+  
   const {
     firstName,
     middleName,
@@ -68,7 +67,8 @@ export const createCustomer = asyncHandler(async (req, res) => {
     isBlacklisted,
     idProofPhoto,
     customerProfilePhoto,
-    pincode
+    pincode,
+    createdBy: req.user._id,
   });
 
 
@@ -77,7 +77,7 @@ export const createCustomer = asyncHandler(async (req, res) => {
 
 // GET All Customers
 export const getAllCustomers = asyncHandler(async (req, res) => {
-  const customers = await Customer.find().lean();
+  const customers = await Customer.find(req.roleQueryFilter).lean();
   const customerList = formatCustomerList(customers);
 
   return res.status(200).json(new ApiResponse(200, "Customers fetched successfully", customerList));
@@ -144,28 +144,28 @@ export const deleteCustomer = asyncHandler(async (req, res) => {
 
 // GET Total Customer Count
 export const getTotalCustomerCount = asyncHandler(async (req, res) => {
-  const totalCustomer = await Customer.countDocuments();
+  const totalCustomer = await Customer.countDocuments(req.roleQueryFilter);
 
   return res.status(200).json(new ApiResponse(200, "Total customer count fetched successfully", { totalCustomer }));
 });
 
 // GET Active Customer Count
 export const getActiveCustomerCount = asyncHandler(async (req, res) => {
-  const activeCount = await Customer.countDocuments({ status: "active", isBlacklisted: { $ne: true }, });
+  const activeCount = await Customer.countDocuments({...req.roleQueryFilter, status: "active", isBlacklisted: { $ne: true }, });
 
   return res.status(200).json(new ApiResponse(200, "Active customer count fetched successfully", { activeCount }));
 });
 
 // GET Blacklisted Customer Count
 export const getBlacklistedCustomerCount = asyncHandler(async (req, res) => {
-  const blacklistedCount = await Customer.countDocuments({ isBlacklisted: true });
+  const blacklistedCount = await Customer.countDocuments({...req.roleQueryFilter, isBlacklisted: true });
 
   return res.status(200).json(new ApiResponse(200, "Blacklisted customer count fetched successfully", { blacklistedCount }));
 });
 
 // GET Active Customers (List)
 export const getActiveCustomers = asyncHandler(async (req, res) => {
-  const activeCustomers = await Customer.find({ status: "active", isBlacklisted: { $ne: true }, }).lean();
+  const activeCustomers = await Customer.find({...req.roleQueryFilter, status: "active", isBlacklisted: { $ne: true }, }).lean();
   const customerList = formatCustomerList(activeCustomers);
 
   return res.status(200).json(new ApiResponse(200, "Active customers fetched successfully", customerList));
@@ -173,7 +173,7 @@ export const getActiveCustomers = asyncHandler(async (req, res) => {
 
 // GET Blacklisted (Blocked) Customers (List)
 export const getBlockedCustomers = asyncHandler(async (req, res) => {
-  const blockedCustomers = await Customer.find({ isBlacklisted: true }).lean();
+  const blockedCustomers = await Customer.find({...req.roleQueryFilter, isBlacklisted: true }).lean();
   const customerList = formatCustomerList(blockedCustomers);
 
   return res.status(200).json(new ApiResponse(200, "Blocked customers fetched successfully", customerList));

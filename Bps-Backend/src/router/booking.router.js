@@ -16,6 +16,7 @@ import {
   createPublicBooking,
   getPendingThirdPartyBookings,
   approveThirdPartyBookingRequest,
+  sendBookingEmailById
 } from '../controller/booking.controller.js';
 
 import { parseFormData } from "../middleware/multerParser.middleware.js";
@@ -29,6 +30,7 @@ router.get('/bookings/count/active', verifyJwt, getActiveDeliveriesCount);
 router.get('/bookings/count/cancelled', verifyJwt, getCancelledBookingsCount);
 router.get('/bookings/revenue/total', verifyJwt, getTotalRevenue);
 router.post('/send-booking-email', sendBookingEmail);
+router.post('/send-booking-email/:bookingId', sendBookingEmailById);
 
 
 //  CRUD routes AFTER static routes

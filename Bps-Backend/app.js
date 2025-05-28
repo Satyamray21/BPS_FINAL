@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { verifyJwt } from "./src/middleware/auth.middleware.js";
 import {vehicleAccessFilter} from "./src/middleware/vehicle.middleware.js"
+import {roleAccessFilter} from "./src/middleware/role.middleware.js"
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -35,9 +36,9 @@ app.use(cookieParser());
 import manageStation from "./src/router/manageStation.router.js"
 app.use("/api/v2/stations", manageStation);
 import driverRouter from "./src/router/driver.route.js"
-app.use("/api/v2/driver", driverRouter);
+app.use("/api/v2/driver",verifyJwt, roleAccessFilter,driverRouter);
 import CustomerRouter from "./src/router/customer.route.js"
-app.use("/api/v2/customers", CustomerRouter);
+app.use("/api/v2/customers",verifyJwt, roleAccessFilter, CustomerRouter);
 import userRouter from "./src/router/user.route.js"
 app.use("/api/v2/users", userRouter)
 import vehicleRouter from "./src/router/vehicle.router.js"
@@ -45,9 +46,9 @@ app.use("/api/v2/vehicles", verifyJwt,vehicleAccessFilter,vehicleRouter)
 import customerQuotation from "./src/router/customerQuotation.router.js"
 app.use("/api/v2/quotation", customerQuotation);
 import contactRouter from "./src/router/contact.router.js"
-app.use("/api/v2/contact", contactRouter);
+app.use("/api/v2/contact",verifyJwt, roleAccessFilter, contactRouter);
 import expenseRouter from "./src/router/expense.router.js"
-app.use("/api/v2/expenses", expenseRouter);
+app.use("/api/v2/expenses",verifyJwt, roleAccessFilter, expenseRouter);
 
 
 import bookingRouter from "./src/router/booking.router.js"

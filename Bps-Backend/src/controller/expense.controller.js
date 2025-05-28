@@ -24,14 +24,14 @@ export const createExpense = asyncHandler(async (req, res) => {
   }
 
   
-  const expense = await Expense.create({ title, date, invoiceNo, details, amount, taxAmount, totalAmount ,document});
+  const expense = await Expense.create({ title, date, invoiceNo, details, amount, taxAmount, totalAmount ,document,createdBy: req.user._id,});
 
   return res.status(201).json(new ApiResponse(201, "Expense created successfully", expense));
 });
 
 
 export const getAllExpenses = asyncHandler(async (req, res) => {
-  const expenses = await Expense.find().sort({ createdAt: -1 });
+  const expenses = await Expense.find(req.roleQueryFilter).sort({ createdAt: -1 });
 
   const expenseList = expenses.map((expense, index) => ({
     sNo: index + 1,

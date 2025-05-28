@@ -23,6 +23,7 @@ export const previewInvoices = async (req, res) => {
 
     if (orderType === "Booking") {
       orders = await Booking.find({
+        ...req.roleQueryFilter,
         customerId: customer._id,
         bookingDate: { $gte: startDate, $lte: finalEndDate },
       })
@@ -31,6 +32,7 @@ export const previewInvoices = async (req, res) => {
         .select("bookingId bookingDate startStation endStation amount");
     } else if (orderType === "Quotation") {
       orders = await Quotation.find({
+        ...req.roleQueryFilter,
         customerId: customer._id,
         quotationDate: { $gte: startDate, $lte: finalEndDate },
       })
@@ -110,12 +112,12 @@ export const generateInvoices = async (req, res) => {
  */
 export const getAllInvoices = async (req, res) => {
   try {
-    const bookings = await Booking.find({ invoiceGenerated: true }).populate(
+    const bookings = await Booking.find({...req.roleQueryFilter, invoiceGenerated: true }).populate(
       "customerId",
       "firstName lastName"
     );
 
-    const quotations = await Quotation.find({ invoiceGenerated: true }).populate(
+    const quotations = await Quotation.find({...req.roleQueryFilter, invoiceGenerated: true }).populate(
       "customerId",
       "firstName lastName"
     );

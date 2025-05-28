@@ -16,14 +16,14 @@ export const createContact = asyncHandler(async (req, res) => {
     throw new ApiError(409, "Contact with this number already exists");
   }
 
-  const contact = await Contact.create({ name, contactNumber, email, address });
+  const contact = await Contact.create({ name, contactNumber, email, address,createdBy: req.user._id });
 
   return res.status(201).json(new ApiResponse(201, "Contact created successfully", contact));
 });
 
 
 export const getAllContacts = asyncHandler(async (req, res) => {
-  const contacts = await Contact.find().sort({ createdAt: -1 });
+  const contacts = await Contact.find(req.roleQueryFilter).sort({ createdAt: -1 });
 
   const contactList = contacts.map((contact, index) => ({
     sNo: index + 1,

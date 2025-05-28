@@ -143,6 +143,30 @@ export const cancelBooking = createAsyncThunk(
     }
   }
 )
+export const sendWhatsAppMsg = createAsyncThunk(
+  'sendMsg/sendWhatsApp',async(bookingId,thunkApi)=>{
+    try{
+      const res = await axios.post(`http://localhost:8000/api/whatsapp/send-booking/${bookingId}`);
+      return res.data;
+    }
+    catch(err)
+    {
+      return thunkApi.rejectWithValue(err.response?.data?.message);
+    }
+  }
+)
+export const sendEmail = createAsyncThunk(
+  'sendEmail/booking',async(bookingId,thunkApi)=>{
+    try{
+      const res = await axios.post(`${BASE_URL}/send-booking-email/${bookingId}`)
+      return res.data;
+    }
+    catch(err)
+    {
+      return thunkApi.rejectWithValue(err.response?.data?.message);
+    }
+  }
+)
 const initialState = {
   list: [],
   requestCount: 0,
@@ -319,6 +343,30 @@ const bookingSlice = createSlice({
       .addCase(cancelBooking.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload
+      })
+      .addCase(sendWhatsAppMsg.pending,(state)=>{
+        state.loading=true;
+        state.error=null
+      })
+      .addCase(sendWhatsAppMsg.fulfilled,(state)=>{
+        state.loading=false;
+        state.error=null
+      })
+      .addCase(sendWhatsAppMsg.rejected,(state,action)=>{
+        state.loading=false;
+        state.error=action.payload;
+      })
+      .addCase(sendEmail.pending,(state)=>{
+        state.loading=true;
+        state.error=null
+      })
+      .addCase(sendEmail.fulfilled,(state)=>{
+        state.loading=false;
+        state.error=null
+      })
+      .addCase(sendEmail.rejected,(state,action)=>{
+        state.loading=false;
+        state.error=action.payload;
       })
       ;
   }
