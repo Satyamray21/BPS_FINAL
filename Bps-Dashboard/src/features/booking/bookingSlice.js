@@ -167,6 +167,30 @@ export const sendEmail = createAsyncThunk(
     }
   }
 )
+export const pendingList = createAsyncThunk(
+  'thirdParty/booking',async(_,thunkApi)=>{
+    try{
+      const res = await axios.get(`${BASE_URL}/pending`);
+      return res.data.bookings;
+    }
+    catch(err)
+    {
+      return thunkApi.rejectWithValue(err.response?.data?.message);
+    }
+  }
+)
+export const approveList = createAsyncThunk(
+  'aproveThirdParty/booking',async(bookingId,thunkApi)=>{
+    try{
+      const res = await axios.patch(`${BASE_URL}/${bookingId}/approve`);
+      return res.data.booking
+    }
+    catch(err)
+    {
+       return thunkApi.rejectWithValue(err.response?.data?.message);
+    }
+  }
+)
 const initialState = {
   list: [],
   requestCount: 0,
@@ -367,6 +391,30 @@ const bookingSlice = createSlice({
       .addCase(sendEmail.rejected,(state,action)=>{
         state.loading=false;
         state.error=action.payload;
+      })
+      .addCase(pendingList.pending,(state)=>{
+        state.loading=true;
+        state.error=null
+      })
+      .addCase(pendingList.fulfilled,(state,action)=>{
+        state.loading=false;
+        state.list=action.payload
+      })
+      .addCase(pendingList.rejected,(state,action)=>{
+        state.loading=false;
+        state.error=action.payload;
+      })
+      .addCase(approveList.pending,(state)=>{
+        state.loading=true;
+        state.error=null
+      })
+      .addCase(approveList.fulfilled,(state)=>{
+        state.loading=false;
+        state.error=null
+      })
+      .addCase(approveList.rejected,(state,action)=>{
+        state.loading=false;
+        state.error=action.payload
       })
       ;
   }

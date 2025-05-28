@@ -22,9 +22,12 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useNavigate } from 'react-router-dom';
+import {useDispatch,useSelector} from 'react-redux';
 import axios from 'axios';
-
+import {pendingList,approveList} from '../features/booking/bookingSlice'
 const AppBarHeader = () => {
+    const dispatch  = useDispatch();
+    const {list:pending} = useSelector(state=>state.bookings);
     const navigate = useNavigate();
     const [anchorEl, setAnchorEl] = useState(null);
     const [notifAnchorEl, setNotifAnchorEl] = useState(null);
@@ -35,32 +38,39 @@ const AppBarHeader = () => {
     const userRole = localStorage.getItem('userRole');
 
     useEffect(() => {
-        const token = localStorage.getItem('authToken');
-        if (token) {
-            axios.get('http://localhost:8000/api/v2/users/profile', {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            })
-                .then(response => {
-                    setUser(response.data.message);
-                })
-                .catch(error => {
-                    console.error('Failed to fetch profile:', error);
-                    setUser(null);
-                });
-        }
-
-        // Static example notifications
-        const exampleNotifications = [
-            {
-                id: 1,
-                type: 'Booking',
-                message: 'New booking request',
+    const token = localStorage.getItem('authToken');
+    if (token) {
+        axios.get('http://localhost:8000/api/v2/users/profile', {
+            headers: {
+                Authorization: `Bearer ${token}`,
             },
-        ];
+        })
+        .then(response => {
+            setUser(response.data.message);
+        })
+        .catch(error => {
+            console.error('Failed to fetch profile:', error);
+            setUser(null);
+        });
+    }
+
+    
+    dispatch(pendingList());
+
+}, [dispatch]);
+
+
+useEffect(() => {
+    console.log("Pending bookings:", pending);
+    if (pending && pending.length > 0) {
+        const exampleNotifications = pending.map(booking => ({
+            id: booking.bookingId,
+            type: 'Booking',
+            message: booking.firstName,
+        }));
         setNotifications(exampleNotifications);
-    }, []);
+    }
+}, [pending]);
 
     const handleOpenMenu = (event) => {
         setAnchorEl(event.currentTarget);
@@ -84,9 +94,8 @@ const AppBarHeader = () => {
         window.location.href = "http://localhost:5173/login";
     };
 
-    const handleAccept = (id) => {
-        console.log(`Accepted notification with ID: ${id}`);
-        setNotifications(prev => prev.filter(n => n.id !== id));
+    const handleAccept = (bookingId) => {
+        dispatch(approveList(bookingId))
     };
 
     const handleReject = (id) => {
@@ -98,7 +107,10 @@ const AppBarHeader = () => {
         if (type === 'Booking') return <AssignmentTurnedInIcon color="info" />;
         return <NotificationsIcon />;
     };
-
+    const handleView = (bookingId) => {
+    
+    navigate(`/booking/${bookingId}`);
+  };
     return (
         <AppBar position="static" sx={{ zIndex: 1201, bgcolor: '#1976d2' }}>
             <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -230,7 +242,7 @@ const AppBarHeader = () => {
                                                 <IconButton
                                                     size="small"
                                                     color="primary"
-                                                    onClick={() => navigate(`/${notif._id}`)}
+                                                    onClick={() => handleView(notif.id)}
                                                 >
                                                     <VisibilityIcon />
                                                 </IconButton>
