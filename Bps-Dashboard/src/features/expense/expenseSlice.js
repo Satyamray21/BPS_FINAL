@@ -40,11 +40,15 @@ export const getAllExpenses = createAsyncThunk(
 export const viewedExpenseById = createAsyncThunk(
     'getExpense/expense',async(invoiceNo,thunkApi)=>{
         try{
+
             const res = await axios.get(`${BASE_URL}/expense/${invoiceNo}`);
+            console.log("res",res);
+
             return res.data.message;
         }
         catch(err)
         {
+            console.log(err.response?.data?.message)
             return thunkApi.rejectWithValue(err.response?.data?.message)
         }
     }

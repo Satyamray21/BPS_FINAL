@@ -31,10 +31,10 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
-import { addExpenses, getAllExpenses,updateByInvoiceNo,viewedExpenseById,clearViewedExpenses} from '../../../features/expense/expenseSlice';
+import { addExpenses, getAllExpenses,viewedExpenseById,clearViewedExpenses } from '../../../features/expense/expenseSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
-
+import { useParams } from 'react-router-dom';
 const modalStyle = {
     position: 'absolute',
     top: '50%',
@@ -48,22 +48,28 @@ const modalStyle = {
 };
 
 const ExpensesCard = () => {
+    const {invoiceNo} = useParams();
+     const [selectedExpense, setSelectedExpense] = useState(null);
+    const [modalMode, setModalMode] = useState('view');
+    const [viewEditOpen, setViewEditOpen] = useState(false);
+
     const [searchExpense, setSearchExpense] = useState('');
     const [open, setOpen] = useState(false);
     const dispatch = useDispatch();
     const { list: expenses } = useSelector((state) => state.expenses);
+    const expenseForm = useSelector((state) => state.expenses.form);
+
     useEffect(() => {
         dispatch(getAllExpenses())
     }, [dispatch])
-    useEffect(()=>{
-        if(invoiceNo)
-        {
-            dispatch(viewedExpenseById(invoiceNo));
+    useEffect(() => {
+        if (invoiceNo) {
+          dispatch(viewedExpenseById(invoiceNo));
         }
-        return ()=>{
-            dispatch(clearViewedExpenses)
-        }
-    },[invoiceNo,dispatch]);
+        return () => {
+          dispatch(clearViewedExpenses());
+        };
+      }, [invoiceNo, dispatch]);
     const filteredExpenses = expenses.filter(exp =>
         exp.name.toLowerCase().includes(searchExpense.toLowerCase())
     );
@@ -102,6 +108,12 @@ const ExpensesCard = () => {
 
         },
     });
+const formatDate = (date) => {
+  if (!date) return '';
+  if (typeof date === 'string') return date.slice(0, 10);
+  if (date instanceof Date) return date.toISOString().slice(0, 10);
+  return '';
+};
 
     return (
         <>
@@ -189,22 +201,112 @@ const ExpensesCard = () => {
                                     <TableCell>{expense.name}</TableCell>
                                     <TableCell>₹{expense.taxableAmount}</TableCell>
                                     <TableCell>
-                                        <IconButton size='small' color='primary' title='invoice'>
+                                        <IconButton
+                                            size='small'
+                                            color='primary'
+                                            title='Invoice'
+                                            onClick={() => {
+                                                const fixedPath = expense.receiving.replace(/\\/g, '/');
+                                                const fileUrl = `http://localhost:8000/${fixedPath}`;
+                                                window.open(fileUrl, '_blank');
+                                            }}
+                                        >
                                             <Inventory2Icon fontSize='small' />
                                         </IconButton>
                                     </TableCell>
                                     <TableCell>
                                         <Box sx={{ display: 'flex', gap: 1 }}>
-                                            <IconButton size="small" color="primary" title="View">
+                                            <IconButton
+                                                size="small"
+                                                color="primary"
+                                                title="View"
+                                                onClick={() => {
+                                                    dispatch(viewedExpenseById(expense.invoiceNo));
+                                                    setSelectedExpense(expense.invoiceNo);
+                                                    setModalMode('view');
+                                                    setViewEditOpen(true);
+                                                }}
+                                            >
                                                 <VisibilityIcon fontSize="small" />
                                             </IconButton>
-                                            <IconButton size="small" color="primary">
+
+                                            <IconButton
+                                                size="small"
+                                                color="primary"
+                                                title="Edit"
+                                                onClick={() => {
+                                                    setSelectedExpense(expense.invoiceNo);
+                                                    setModalMode('edit');
+                                                    setViewEditOpen(true);
+                                                }}
+                                            >
                                                 <EditIcon fontSize="small" />
                                             </IconButton>
                                             <IconButton size="small" color="error">
                                                 <DeleteIcon fontSize="small" />
                                             </IconButton>
                                         </Box>
+
+                                        <Modal open={viewEditOpen} onClose={() => setViewEditOpen(false)}>
+                                            <Box sx={modalStyle}>
+                                                <Typography variant="h6" mb={2}>
+                                                    {modalMode === 'view' ? 'View Expense' : 'Edit Expense'}
+                                                </Typography>
+                                                <Stack spacing={2}>
+                                                    <TextField
+                                                        label="Date"
+                                                        type="date"
+                                                        value={formatDate(expenseForm?.date)}
+
+                                                        fullWidth
+                                                        InputLabelProps={{ shrink: true }}
+                                                        InputProps={{ readOnly: modalMode === 'view' }}
+                                                    />
+                                                    <TextField
+                                                        label="Invoice No"
+                                                        value={expenseForm?.invoiceNo || ''}
+                                                        fullWidth
+                                                        InputProps={{ readOnly: modalMode === 'view' }}
+                                                    />
+                                                    <TextField
+                                                        label="Title"
+                                                        value={expenseForm?.title || ''}
+                                                        fullWidth
+                                                        InputProps={{ readOnly: modalMode === 'view' }}
+                                                    />
+                                                    <TextField
+                                                        label="Details"
+                                                        value={expenseForm?.details || ''}
+                                                        fullWidth
+                                                        InputProps={{ readOnly: modalMode === 'view' }}
+                                                    />
+                                                    <TextField
+                                                        label="Amount"
+                                                        value={expenseForm?.amount || ''}
+                                                        fullWidth
+                                                        InputProps={{ readOnly: modalMode === 'view' }}
+                                                    />
+                                                    <TextField
+                                                        label="Tax Amount"
+                                                        value={expenseForm?.taxAmount || ''}
+                                                        fullWidth
+                                                        InputProps={{ readOnly: modalMode === 'view' }}
+                                                    />
+                                                    <TextField
+                                                        label="Total Amount"
+                                                        value={expenseForm?.totalAmount || ''}
+                                                        fullWidth
+                                                        InputProps={{ readOnly: modalMode === 'view' }}
+                                                    />
+                                                    {modalMode === 'edit' && (
+                                                        <Button variant="contained" color="primary">
+                                                            Update
+                                                        </Button>
+                                                    )}
+                                                </Stack>
+                                            </Box>
+                                        </Modal>
+
                                     </TableCell>
                                 </TableRow>
                             ))
