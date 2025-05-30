@@ -32,113 +32,96 @@ const populateVehicleAndBooking = (query) => {
 // Assign a delivery to a booking
 // Assign a delivery to a booking or quotation
 export const assignDelivery = asyncHandler(async (req, res) => {
-  console.log("req", req.body);
+  console.log("req",req.body);
   const { bookingIds = [], quotationIds = [], driverName, vehicleModel } = req.body;
 
   if ((!bookingIds.length && !quotationIds.length) || !driverName || !vehicleModel) {
     throw new ApiError(400, "Booking or Quotation IDs, Driver Name, and Vehicle Model are required.");
   }
 
-  // Find vehicle
   const vehicle = await Vehicle.findOne({ vehicleModel });
-  if (!vehicle) {
-    throw new ApiError(404, "Vehicle not found with this model.");
-  }
-
+  if (!vehicle) throw new ApiError(404, "Vehicle not found with this model.");
   const vehicleId = vehicle._id;
 
-  // Check for active delivery conflicts based on delivery type
   let existingDriverDelivery = null;
   let existingVehicleDelivery = null;
 
   if (bookingIds.length) {
     existingDriverDelivery = await Delivery.findOne({
-      driverName,
-      deliveryType: "Booking",
-      status: { $ne: "Completed" },
+      driverName, deliveryType: "Booking", status: { $ne: "Completed" },
     });
     existingVehicleDelivery = await Delivery.findOne({
-      vehicleModel: vehicleId,
-      deliveryType: "Booking",
-      status: { $ne: "Completed" },
+      vehicleModel: vehicleId, deliveryType: "Booking", status: { $ne: "Completed" },
     });
   }
 
   if (quotationIds.length) {
     existingDriverDelivery = await Delivery.findOne({
-      driverName,
-      deliveryType: "Quotation",
-      status: { $ne: "Completed" },
+      driverName, deliveryType: "Quotation", status: { $ne: "Completed" },
     });
     existingVehicleDelivery = await Delivery.findOne({
-      vehicleModel: vehicleId,
-      deliveryType: "Quotation",
-      status: { $ne: "Completed" },
+      vehicleModel: vehicleId, deliveryType: "Quotation", status: { $ne: "Completed" },
     });
   }
 
-  if (existingDriverDelivery) {
-    throw new ApiError(400, "This driver is already assigned to an active delivery of this type.");
-  }
-
-  if (existingVehicleDelivery) {
-    throw new ApiError(400, "This vehicle is already assigned to an active delivery of this type.");
-  }
+  if (existingDriverDelivery) throw new ApiError(400, "Driver already has active delivery.");
+  if (existingVehicleDelivery) throw new ApiError(400, "Vehicle already in active delivery.");
 
   const deliveries = [];
+  const responseData = [];
 
-  // Assign to Bookings
   for (const bookingId of bookingIds) {
-    const booking = await Booking.findOne({ bookingId });
+    const booking = await Booking.findOne({ bookingId })
+      .populate('startStation endStation', 'stationName')
+      .lean();
     if (!booking) continue;
 
     const alreadyAssigned = await Delivery.findOne({ bookingId });
     if (alreadyAssigned) continue;
 
-    booking.activeDelivery = true;
-    await booking.save();
+    await Booking.updateOne({ bookingId }, { activeDelivery: true });
 
-    deliveries.push({
-      orderId: generateOrderId(),
-      bookingId,
-      deliveryType: "Booking",
-      driverName,
-      vehicleModel: vehicleId,
-      status: "Pending",
+    const deliveryObj = {
+  orderId: generateOrderId(),
+  bookingId,
+  deliveryType: "Booking",
+  driverName,
+  vehicleModel: vehicleId,
+  status: "Pending",
+  fromName: booking.senderName || 'N/A',
+  pickup: booking.startStation?.stationName || 'N/A',
+  toName: booking.receiverName || 'N/A',
+  drop: booking.endStation?.stationName || 'N/A',
+  contact: booking.mobile || 'N/A',
+};
+
+
+    deliveries.push(deliveryObj);
+
+    responseData.push({
+      ...deliveryObj,
+      sno: responseData.length + 1,
+      orderBy: booking.createdByRole || 'N/A',
+      date: booking.bookingDate?.toISOString().slice(0, 10) || 'N/A',
+      fromName: booking.senderName || 'N/A',
+      pickup: booking.startStation?.stationName || 'N/A',
+      toName: booking.receiverName || 'N/A',
+      drop: booking.endStation?.stationName || 'N/A',
+      contact: booking.mobile || 'N/A',
     });
   }
 
-  // Assign to Quotations
-  for (const quotationId of quotationIds) {
-    const quotation = await Quotation.findOne({ bookingId: quotationId });
-    if (!quotation) continue;
+  // Handle quotationIds similarly if needed...
 
-    const alreadyAssigned = await Delivery.findOne({ quotationId });
-    if (alreadyAssigned) continue;
+  if (!deliveries.length) throw new ApiError(400, "No valid unassigned bookings or quotations found.");
 
-    quotation.activeDelivery = true;
-    await quotation.save();
-
-    deliveries.push({
-      orderId: generateOrderId(),
-      quotationId,
-      deliveryType: "Quotation",
-      driverName,
-      vehicleModel: vehicleId,
-      status: "Pending",
-    });
-  }
-
-  if (!deliveries.length) {
-    throw new ApiError(400, "No valid unassigned bookings or quotations found.");
-  }
-
-  const createdDeliveries = await Delivery.insertMany(deliveries);
+  await Delivery.insertMany(deliveries);
 
   res.status(201).json(
-    new ApiResponse(201, createdDeliveries, "Deliveries assigned successfully.")
+    new ApiResponse(201, responseData, "Deliveries assigned successfully with booking details.")
   );
 });
+
 
 
 
@@ -150,7 +133,7 @@ export const assignDelivery = asyncHandler(async (req, res) => {
 export const listBookingDeliveries = asyncHandler(async (req, res) => {
   const deliveries = await Delivery.find({ deliveryType: "Booking",status: { $ne: "Final Delivery" } })
   .populate([
-    { path: "vehicleId", select: "vehicleModel" },
+    { path: "vehicleModel", select: "vehicleModel" },
     { path: "bookingId", populate: [
         { path: "startStation", select: "stationName" },
         { path: "endStation", select: "stationName" }
@@ -229,7 +212,8 @@ export const finalizeDelivery = asyncHandler(async (req, res) => {
   await delivery.save();
 
   // Update the associated booking to reflect no delivery assigned
-  const booking = await Booking.findById(delivery.bookingId);
+  const booking = await Booking.findOne({ bookingId: delivery.bookingId });
+
   if (booking) {
     booking.deliveryAssigned = false;
     await booking.save();
@@ -261,25 +245,17 @@ export const countFinalDeliveries = asyncHandler(async (req, res) => {
 
 export const listFinalDeliveries = asyncHandler(async (req, res) => {
   const deliveries = await Delivery.find({ status: "Final Delivery" })
-    .populate({
-      path: "bookingId",
-      select: "startStation endStation",
-      populate: {
-        path: "startStation endStation",
-        select: "stationName"
-      }
-    })
-    .populate("vehicleId", "vehicleName")
-    .lean();
+    console.log("d",deliveries);
 
   const data = deliveries.map((delivery, i) => ({
     SNo: i + 1,
     orderId: delivery.orderId,
-    startStation: delivery.bookingId?.startStation?.stationName || "N/A",
-    endStation: delivery.bookingId?.endStation?.stationName || "N/A",
+    pickup: delivery.pickup,  // Renamed from startStation
+    drop: delivery.drop || "N/A",     // Renamed from endStation
     driverName: delivery.driverName || "N/A",
-    vehicle: delivery.vehicleId,
+    vehicle: delivery.vehicleId?.vehicleName || "N/A",              // vehicleId → vehicleName
   }));
 
   res.status(200).json(new ApiResponse(200, data, "Final delivery list fetched successfully."));
 });
+

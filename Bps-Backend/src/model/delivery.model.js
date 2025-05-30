@@ -26,6 +26,11 @@ const deliverySchema = new mongoose.Schema({
     enum: ["Pending", "Final Delivery"], 
     default: "Pending",
   },
+  fromName: String,
+  pickup: String,
+  toName: String,
+  drop: String,
+  contact: String,
 }, {
   timestamps: true,
 });
