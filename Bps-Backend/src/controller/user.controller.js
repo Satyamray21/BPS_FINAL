@@ -316,33 +316,18 @@ export const getBlacklistedSupervisorsList = asyncHandler(async (req, res) => {
 
 export const deleteUser = asyncHandler(async (req, res) => {
   try {
-    const requestingUserId = req.user._id; // Logged-in user's Mongo _id
-    const requestingUserRole = req.user.role; // Logged-in user's role
 
-    const userToDelete = await User.findOne({ adminId: req.params.adminId });
-    if (!userToDelete) {
-      throw new ApiError(404, "User not found");
+    const {adminId} = req.params;
+    const deleteUser = await User.findOneAndDelete({adminId});
+    if(!deleteUser)
+    {
+      res.status(404).json({message:"User not found"});
     }
 
-    // Supervisor deletion logic
-    if (requestingUserRole === 'supervisor') {
-      if (requestingUserId.toString() !== userToDelete._id.toString()) {
-        throw new ApiError(403, "Supervisors can only delete their own account");
-      }
-    }
+     res.status(200).json(new ApiResponse(200, "User deleted successfully"));
 
-    // Admin deletion logic
-    if (requestingUserRole === 'admin') {
-      if (userToDelete.role === 'admin' && requestingUserId.toString() !== userToDelete._id.toString()) {
-        // If trying to delete other admins (not yourself)
-        throw new ApiError(403, "Admins cannot delete other admins");
-      }
-    }
 
-    // Perform delete
-    await User.findByIdAndDelete(userToDelete._id);
-
-    res.status(200).json(new ApiResponse(200, "User deleted successfully"));
+   
   } catch (error) {
     console.error("Delete user error:", error.message);
     throw new ApiError(500, error.message);
