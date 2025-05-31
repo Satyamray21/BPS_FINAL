@@ -127,6 +127,7 @@ const QuotationForm = () => {
             <Form>
               <EffectSyncCities values={values} dispatch={dispatch} setSenderCities={setSenderCities}
                 setReceiverCities={setReceiverCities} />
+                <EffectSyncTotal values={values} setFieldValue={setFieldValue}/>
               <Box sx={{ p: 3, maxWidth: 1200, mx: "auto" }}>
                 <Grid size={{ xs: 12 }}>
                   <Typography variant="h6" fontWeight="bold">
@@ -463,8 +464,8 @@ const QuotationForm = () => {
                           <TextField
                             name={name}
                             label={label}
-                            value={values[name]}
-                            onChange={handleChange}
+                            value={values.grandTotal}
+                  InputProps={{ readOnly: true }}
                             fullWidth
                             size="small"
                           />
@@ -532,5 +533,22 @@ const EffectSyncCities = ({ values, dispatch, setSenderCities, setReceiverCities
 
   return null;
 };
+const EffectSyncTotal=({values,setFieldValue})=>{
+useEffect(() => {
+  let totalAmount = 0;
+
+  values.productDetails.forEach((item) => {
+    const amount = parseFloat(item.price) || 0;
+    totalAmount += amount;
+  });
+
+  const stax = parseFloat(values.sTax) || 0;
+  const amount = totalAmount + stax;
+
+  //setFieldValue("billTotal", totalAmount.toFixed(2));
+  setFieldValue("grandTotal", amount.toFixed(2));
+}, [values.productDetails, values.sTax]);
+}
+
 
 export default QuotationForm;
