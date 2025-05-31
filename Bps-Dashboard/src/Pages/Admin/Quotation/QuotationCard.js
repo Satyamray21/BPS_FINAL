@@ -323,9 +323,9 @@ const QuotationCard = () => {
                     <TableCell>{row.order}</TableCell>
                     <TableCell>{row.Date}</TableCell>
                     <TableCell>{row.Name}</TableCell>
-                    <TableCell>{row["Pick up"]}</TableCell>
+                    <TableCell>{row.pickup}</TableCell>
                     <TableCell>{row["Name (Drop)"]}</TableCell>
-                    <TableCell>{row.Drop}</TableCell>
+                    <TableCell>{row.drop}</TableCell>
                     <TableCell>{row.Contact}</TableCell>
                     <TableCell>
                       <Box sx={{ display: "flex", gap: 1 }}>

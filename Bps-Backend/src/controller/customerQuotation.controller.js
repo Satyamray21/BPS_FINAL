@@ -14,10 +14,10 @@ const formatQuotations = (quotations) => {
     "Name": q.customerId
       ? `${q.customerId.firstName} ${q.customerId.lastName}`
       : `${q.firstName || ""} ${q.lastName || ""}`.trim(),
-    "Pick up": q.startStation?.stationName || q.startStationName || 'N/A',
+    "pickup": q.startStation?.stationName || q.startStationName || 'N/A',
     "": "",
     "Name (Drop)": q.toCustomerName || "",
-    "Drop": q.toCity || "",
+    "drop": q.endStation || "",
     "Contact": q.mobile || "",
     "Action": [
       { name: "View", icon: "view-icon", action: `/api/quotations/${q._id}` },

@@ -28,7 +28,25 @@ const populateVehicleAndBooking = (query) => {
     },
   }).populate("vehicleId", "vehicleName"); // Populate Vehicle information with vehicleName
 };
+export const updateDriverAndVehicleAvailability = async (driverName, vehicleMode) => {
+  const activeDriverDeliveries = await Delivery.find({
+    driverName,
+    status: { $ne: "Completed" },
+  });
 
+  const activeVehicleDeliveries = await Delivery.find({
+    vehicleModel: vehicleModel,
+    status: { $ne: "Completed" },
+  });
+
+  if (activeDriverDeliveries.length === 0) {
+    await Driver.updateOne({ firstName: driverName }, { isAvailable: true });
+  }
+
+  if (activeVehicleDeliveries.length === 0) {
+    await Vehicle.updateOne({ _id: vehicleMode }, { isAvailable: true });
+  }
+};
 // Assign a delivery to a booking
 // Assign a delivery to a booking or quotation
 export const assignDelivery = asyncHandler(async (req, res) => {
@@ -110,6 +128,39 @@ export const assignDelivery = asyncHandler(async (req, res) => {
       contact: booking.mobile || 'N/A',
     });
   }
+  for (const quotationId of quotationIds) {
+    const quotation = await Quotation.findOne({ bookingId: quotationId })
+      
+    if (!quotation) continue;
+
+    const alreadyAssigned = await Delivery.findOne({ quotationId });
+    if (alreadyAssigned) continue;
+
+    await Quotation.updateOne({ bookingId: quotationId }, { activeDelivery: true });
+
+    const deliveryObj = {
+      orderId: generateOrderId(),
+      quotationId,
+      deliveryType: "Quotation",
+      driverName,
+      vehicleModel: vehicleId,
+      status: "Pending",
+      fromName: quotation.senderName || 'N/A',
+      pickup: quotation.startStation?.stationName || 'N/A',
+      toName: quotation.receiverName || 'N/A',
+      drop: quotation.endStation || 'N/A',
+      contact: quotation.mobile || 'N/A',
+    };
+
+    deliveries.push(deliveryObj);
+    responseData.push({
+      ...deliveryObj,
+      sno: responseData.length + 1,
+      orderBy: quotation.createdByRole || 'N/A',
+      date: quotation.quotationDate?.toISOString().slice(0, 10) || 'N/A',
+    });
+  }
+
 
   // Handle quotationIds similarly if needed...
 
@@ -218,7 +269,7 @@ export const finalizeDelivery = asyncHandler(async (req, res) => {
     booking.deliveryAssigned = false;
     await booking.save();
   }
-
+   await updateDriverAndVehicleAvailability(delivery.driverName, delivery.vehicleModel)
   res.status(200).json(new ApiResponse(200, {
     orderId: delivery.orderId,
     status: "Final Delivery",
