@@ -241,16 +241,12 @@ export const getTotalCancelled = asyncHandler(async (req, res) => {
 export const getTotalRevenue = asyncHandler(async (req, res) => {
   const quotations = await Quotation.find();
 
-  const total = quotations.reduce((sum, q) => {
-    // Use the computedTotalRevenue from the virtual field
-    const computedRevenue = Number(q.computedTotalRevenue) || 0;
+  const totalRevenue = quotations.reduce((sum, q) => sum + (q.amount || 0), 0);
 
-    // Accumulate the computed revenue
-    return sum + computedRevenue;
-  }, 0);
-  console.log("Total Revenue:", total);
-  res.status(200).json(new ApiResponse(200, { totalRevenue: total }));
+  console.log("Total Revenue:", totalRevenue);
+  res.status(200).json(new ApiResponse(200, { totalRevenue }));
 });
+
 
 
 export const searchQuotationByBookingId = asyncHandler(async (req, res, next) => {
@@ -305,38 +301,39 @@ export const getCancelledList = asyncHandler(async (req, res) => {
 // Controller to get revenue details from quotations
 // Controller to get total revenue from quotations
 export const getRevenue = asyncHandler(async (req, res) => {
-  // Fetch all quotations that are NOT cancelled
   const filter = getBookingFilterByType('request', req.user);
   const quotations = await Quotation.find(filter)
-    .select('bookingId quotationDate startStationName endStation grandTotal computedTotalRevenue')
+    .select('bookingId quotationDate startStationName endStation grandTotal computedTotalRevenue amount sTax')
     .lean();
 
-  // Calculate total revenue using grandTotal or computedTotalRevenue (choose what fits your logic)
-  const total = quotations.reduce((sum, q) => {
-    // Use the computedTotalRevenue from the virtual field
-    const computedRevenue = Number(q.computedTotalRevenue) || 0;
+  // Calculate grandTotal = amount + sTax (use this instead of grandTotal field)
+  const totalRevenue = quotations.reduce(
+    (sum, q) => sum + ((q.amount || 0) + (q.sTax || 0)),
+    0
+  );
 
-    // Accumulate the computed revenue
-    return sum + computedRevenue;
-  }, 0);
-  console.log("Total Revenue:", total);
+  console.log("Total Revenue:", totalRevenue);
 
-  // Prepare data array for detailed response
-  const data = quotations.map((q, index) => ({
-    SNo: index + 1,
-    bookingId: q.bookingId,
-    date: q.quotationDate ? new Date(q.quotationDate).toISOString().slice(0, 10) : 'N/A',
-    pickup: q.startStationName || 'Unknown',
-    drop: q.endStation || 'Unknown',
-    revenue: (Number(q.grandTotal) || Number(q.computedTotalRevenue) || 0).toFixed(2),
-  }));
+  const data = quotations.map((q, index) => {
+    const grandTotal = (q.amount || 0) + (q.sTax || 0);
+    return {
+      SNo: index + 1,
+      bookingId: q.bookingId,
+      date: q.quotationDate ? new Date(q.quotationDate).toISOString().slice(0, 10) : 'N/A',
+      pickup: q.startStationName || 'Unknown',
+      drop: q.endStation || 'Unknown',
+      revenue: grandTotal.toFixed(2),
+    };
+  });
 
   res.status(200).json({
-    totalRevenue: total.toFixed(2),
+    totalRevenue: totalRevenue.toFixed(2),
     count: data.length,
     data,
   });
 });
+
+
 
 
 
