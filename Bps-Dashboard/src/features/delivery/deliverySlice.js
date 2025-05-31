@@ -25,6 +25,19 @@ export const assignDeliveries = createAsyncThunk(
     }
   }
 );
+
+export const finalDeliveryList =  createAsyncThunk(
+ 'finalDelivery/list',async(_,thunkApi)=>{
+  try{
+    const res = await axios.get(`${BASE_URL}/final/list`);
+    return res.data.data;
+  }
+  catch(err)
+  {
+    return thunkApi.rejectWithValue(err.response?.message?.data);
+  }
+ }
+)
 const deliverySlice = createSlice({
   name: 'delivery',
   initialState: {
@@ -46,7 +59,21 @@ const deliverySlice = createSlice({
       .addCase(assignDeliveries.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      });
+      })
+      .addCase(finalDeliveryList.pending,(state)=>{
+        state.loading=true;
+        state.false=null
+      })
+      .addCase(finalDeliveryList.fulfilled,(state,action)=>{
+        state.loading=false;
+        state.list=action.payload
+      })
+      .addCase(finalDeliveryList.rejected,(state,action)=>{
+        state.loading=false;
+        state.error=action.payload
+      })
+      
+      ;
   },
 });
 
