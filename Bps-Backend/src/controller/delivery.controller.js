@@ -6,8 +6,8 @@ import Delivery from "../model/delivery.model.js";
 import { Vehicle } from "../model/vehicle.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-
-
+import { Customer } from '../model/customer.model.js';
+import nodemailer from 'nodemailer';
 
 // Helper function to generate Order ID
 const generateOrderId = () => {
@@ -16,7 +16,13 @@ const generateOrderId = () => {
   const suffix = "DELIVERY";
   return `${prefix}${randomNumber}${suffix}`;
 };
-
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.gmail,
+    pass: process.env.app_pass
+  }
+});
 // Refactored Helper function to populate vehicle and booking info
 const populateVehicleAndBooking = (query) => {
   return query.populate({
@@ -275,6 +281,97 @@ export const finalizeDelivery = asyncHandler(async (req, res) => {
     status: "Final Delivery",
   }, "Delivery marked as final."));
 });
+export const sendDeliverySuccessEmail = async (email, booking) => {
+  const {
+    firstName,
+    lastName,
+    bookingId,
+    senderLocality,
+    fromCity,
+    fromState,
+    senderPincode,
+    receiverLocality,
+    toState,
+    toCity,
+    toPincode,
+    grandTotal,
+    items = []
+  } = booking;
+
+  const totalWeight = items.reduce((sum, item) => sum + (item.weight || 0), 0);
+
+  const mailOptions = {
+    from: process.env.GMAIL_USER,
+    to: email,
+    subject: `Delivery Confirmation - Order ${bookingId}`,
+    html: `
+      <h2>Delivery Confirmation</h2>
+
+      <p>Dear <strong>${firstName} ${lastName}</strong>,</p>
+
+      <p>Your order with <strong>Booking ID: ${bookingId}</strong> has been successfully delivered.</p>
+
+      <h3>From Address:</h3>
+      <p>${senderLocality}, ${fromCity}, ${fromState}, ${senderPincode}</p>
+
+      <h3>To Address:</h3>
+      <p>${receiverLocality}, ${toCity}, ${toState}, ${toPincode}</p>
+
+      <h3>Product Details:</h3>
+      <p>Weight: ${totalWeight} kg</p>
+      <p>Total Amount: ₹${grandTotal}</p>
+
+      <p>Thank you for choosing BharatParcel. We hope to serve you again.</p>
+
+      <p>Best regards,<br/> BharatParcel Team</p>
+    `
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`Delivery confirmation email sent to ${email}`);
+  } catch (error) {
+    console.error('Error sending delivery confirmation email:', error);
+  }
+};
+export const sendDeliverySuccessByOrderId = async (req, res) => {
+  const { orderId } = req.params;
+
+  try {
+    // Step 1: Find the delivery using orderId
+    const delivery = await Delivery.findOne({ orderId });
+
+    if (!delivery) {
+      return res.status(404).json({ message: 'Delivery not found for this orderId' });
+    }
+
+    // Step 2: Extract bookingId from delivery and find the booking with populated customer info
+    const booking = await Booking.findOne({ bookingId: delivery.bookingId })
+      .populate('customerId', 'emailId firstName lastName');
+
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found for this order' });
+    }
+
+    const customer = booking.customerId;
+
+    if (!customer?.emailId) {
+      return res.status(400).json({ message: 'Customer email not available' });
+    }
+
+    // Step 3: Send the booking confirmation email
+    await sendDeliverySuccessEmail(customer.emailId, {
+      ...booking.toObject(),
+      firstName: customer.firstName,
+      lastName: customer.lastName
+    });
+
+    res.status(200).json({ message: 'Booking confirmation email sent successfully' });
+  } catch (error) {
+    console.error('Error sending booking email by orderId:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
 
 // Count Deliveries
 export const countBookingDeliveries = asyncHandler(async (req, res) => {
