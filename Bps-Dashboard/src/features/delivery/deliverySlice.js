@@ -38,6 +38,30 @@ export const finalDeliveryList =  createAsyncThunk(
   }
  }
 )
+export const finalDeliveryMail = createAsyncThunk(
+  'finalDelivery/mail',async(orderId,thunkApi)=>{
+    try{
+      const res = await axios.post(`${BASE_URL}/send-booking-email/${orderId}`);
+      return res.data;
+    }
+    catch(err)
+    {
+      return thunkApi.rejectWithValue(err.response?.message?.data);
+    }
+  }
+)
+export const finalDeliveryWhatsApp = createAsyncThunk(
+  'finalDelivery/whatsapp',async(orderId,thunkApi)=>{
+    try{
+      const res = await axios.post(`http://localhost:8000/api/whatsapp/send-final-delivery/${orderId}`);
+      return res.data;
+    }
+    catch(err)
+    {
+      return thunkApi.rejectWithValue(err.response?.message?.data);
+    }
+  }
+)
 const deliverySlice = createSlice({
   name: 'delivery',
   initialState: {
@@ -72,9 +96,34 @@ const deliverySlice = createSlice({
         state.loading=false;
         state.error=action.payload
       })
+      .addCase(finalDeliveryMail.pending,(state)=>{
+        state.loading=true;
+        state.error=null
+      })
+      .addCase(finalDeliveryMail.fulfilled,(state,action)=>{
+        state.loading=false;
+        state.error=null
+      })
+      .addCase(finalDeliveryMail.rejected,(state,action)=>{
+        state.loading=false;
+        state.error=action.payload;
+      })
+      .addCase(finalDeliveryWhatsApp.pending,(state,action)=>{
+        state.loading=true;
+        state.error=false;
+      })
+      .addCase(finalDeliveryWhatsApp.fulfilled,(state)=>{
+        state.loading=false;
+        state.error=null
+      })
+      .addCase(finalDeliveryWhatsApp.rejected,(state,action)=>{
+        state.loading=false;
+        state.error=action.payload;
+      })
       
       ;
   },
 });
+
 
 export default deliverySlice.reducer;

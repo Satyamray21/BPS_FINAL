@@ -2,6 +2,7 @@ import Booking from '../model/booking.model.js';
 import { sendWhatsAppMessage } from '../services/whatsappServices.js';
 import {Customer} from '../model/customer.model.js'
 import Quotation from "../model/customerQuotation.model.js";
+import Delivery from "../model/delivery.model.js"
 export const sendMessage = async (req, res) => {
     try {
         const { message, to } = req.body;
@@ -137,6 +138,79 @@ export const sendQuotationConfirmation = async (req, res) => {
   } catch (error) {
     console.error('Error in sendQuotationConfirmation:', error);
     res.status(500).json({ success: false, message: 'Failed to send quotation confirmation' });
+  }
+};
+const generateDeliverySuccessMessage = (customer, booking) => {
+  const {
+    bookingId,
+    items = []
+  } = booking;
+
+  const totalWeight = items.reduce((sum, item) => sum + (item.weight || 0), 0);
+  const itemCount = items.length;
+
+  return `*📦 Delivery Confirmation*
+
+Dear *${customer.firstName} ${customer.lastName}*,
+
+Your parcel with *Booking ID: ${bookingId}* has been successfully delivered.
+
+
+
+Thank you for choosing *BharatParcel*. We look forward to serving you again.
+
+_BharatParcel Team_`;
+};
+export const sendDeliverySuccessWhatsApp = async (req, res) => {
+  const { orderId } = req.params;
+
+  try {
+    const delivery = await Delivery.findOne({ orderId });
+    if (!delivery) {
+      return res.status(404).json({ message: 'Delivery not found for this orderId' });
+    }
+
+    let customer, messageSourceData;
+
+    if (delivery.deliveryType === 'Booking') {
+      const booking = await Booking.findOne({ bookingId: delivery.bookingId }).populate('customerId');
+      if (booking) {
+        customer = booking.customerId;
+        messageSourceData = {
+          ...booking.toObject(),
+          firstName: customer?.firstName,
+          lastName: customer?.lastName
+        };
+      }
+    }
+
+    if (!messageSourceData && delivery.deliveryType === 'Quotation') {
+      const quotation = await Quotation.findOne({ bookingId: delivery.quotationId }).populate('customerId');
+      if (quotation) {
+        customer = quotation.customerId;
+        messageSourceData = {
+          ...quotation.toObject(),
+          firstName: customer?.firstName,
+          lastName: customer?.lastName
+        };
+      }
+    }
+
+    if (!messageSourceData || !customer?.contactNumber) {
+      return res.status(404).json({ message: 'Booking/Quotation or customer contact not found' });
+    }
+
+    const contact = String(customer.contactNumber);
+    const formattedNumber = contact.startsWith('+') ? contact : `+91${contact}`;
+    console.log("f",formattedNumber);
+    const message = generateDeliverySuccessMessage(customer, messageSourceData);
+
+    await sendWhatsAppMessage(formattedNumber, message);
+
+    res.status(200).json({ message: 'Delivery confirmation WhatsApp message sent successfully' });
+  } catch (error) {
+    console.error('Error in sendDeliverySuccessWhatsApp:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
