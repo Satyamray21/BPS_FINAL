@@ -34,7 +34,7 @@ const populateVehicleAndBooking = (query) => {
     },
   }).populate("vehicleId", "vehicleName"); // Populate Vehicle information with vehicleName
 };
-export const updateDriverAndVehicleAvailability = async (driverName, vehicleMode) => {
+export const updateDriverAndVehicleAvailability = async (driverName, vehicleModel) => {
   const activeDriverDeliveries = await Delivery.find({
     driverName,
     status: { $ne: "Completed" },
@@ -50,7 +50,7 @@ export const updateDriverAndVehicleAvailability = async (driverName, vehicleMode
   }
 
   if (activeVehicleDeliveries.length === 0) {
-    await Vehicle.updateOne({ _id: vehicleMode }, { isAvailable: true });
+    await Vehicle.updateOne({ _id: vehicleModel }, { isAvailable: true });
   }
 };
 // Assign a delivery to a booking
@@ -152,7 +152,7 @@ export const assignDelivery = asyncHandler(async (req, res) => {
       vehicleModel: vehicleId,
       status: "Pending",
       fromName: quotation.senderName || 'N/A',
-      pickup: quotation.startStation?.stationName || 'N/A',
+      pickup: quotation.startStation?.stationName || quotation.startStationName || 'N/A',
       toName: quotation.receiverName || 'N/A',
       drop: quotation.endStation || 'N/A',
       contact: quotation.mobile || 'N/A',
@@ -228,7 +228,7 @@ export const listQuotationDeliveries = asyncHandler(async (req, res) => {
         select: "stationName"
       }
     })
-    .populate("vehicleId", "vehicleModel") 
+    
     .lean();
 
   const data = deliveries.map((delivery, i) => ({
@@ -240,7 +240,7 @@ export const listQuotationDeliveries = asyncHandler(async (req, res) => {
     endStation: delivery.quotationId?.endStation || "N/A", // Corrected here
     status: delivery.status || "Pending",
     driverName: delivery.driverName || "N/A",
-    vehicleName: delivery.vehicleId?.vehicleModel || "N/A",
+    vehicleName: delivery.vehicleModel || "N/A",
   }));
 
   res.status(200).json(new ApiResponse(200, data, "Quotation deliveries fetched successfully."));
@@ -253,7 +253,7 @@ export const listQuotationDeliveries = asyncHandler(async (req, res) => {
 export const finalizeDelivery = asyncHandler(async (req, res) => {
   const { orderId } = req.params; // Getting orderId from params
 
-  // Find delivery based on orderId, not _id
+  
   const delivery = await Delivery.findOne({ orderId: orderId });
 
   if (!delivery) {
@@ -286,20 +286,11 @@ export const sendDeliverySuccessEmail = async (email, booking) => {
     firstName,
     lastName,
     bookingId,
-    senderLocality,
-    fromCity,
-    fromState,
-    senderPincode,
-    receiverLocality,
-    toState,
-    toCity,
-    toPincode,
-    grandTotal,
+    
     items = []
   } = booking;
 
-  const totalWeight = items.reduce((sum, item) => sum + (item.weight || 0), 0);
-
+  
   const mailOptions = {
     from: process.env.GMAIL_USER,
     to: email,
@@ -311,15 +302,7 @@ export const sendDeliverySuccessEmail = async (email, booking) => {
 
       <p>Your order with <strong>Booking ID: ${bookingId}</strong> has been successfully delivered.</p>
 
-      <h3>From Address:</h3>
-      <p>${senderLocality}, ${fromCity}, ${fromState}, ${senderPincode}</p>
-
-      <h3>To Address:</h3>
-      <p>${receiverLocality}, ${toCity}, ${toState}, ${toPincode}</p>
-
-      <h3>Product Details:</h3>
-      <p>Weight: ${totalWeight} kg</p>
-      <p>Total Amount: ₹${grandTotal}</p>
+      
 
       <p>Thank you for choosing BharatParcel. We hope to serve you again.</p>
 
@@ -338,40 +321,53 @@ export const sendDeliverySuccessByOrderId = async (req, res) => {
   const { orderId } = req.params;
 
   try {
-    // Step 1: Find the delivery using orderId
     const delivery = await Delivery.findOne({ orderId });
-
     if (!delivery) {
       return res.status(404).json({ message: 'Delivery not found for this orderId' });
     }
 
-    // Step 2: Extract bookingId from delivery and find the booking with populated customer info
-    const booking = await Booking.findOne({ bookingId: delivery.bookingId })
-      .populate('customerId', 'emailId firstName lastName');
+    let customer, emailSourceData;
 
-    if (!booking) {
-      return res.status(404).json({ message: 'Booking not found for this order' });
+    // CASE 1: If deliveryType is Booking
+    if (delivery.deliveryType === 'Booking') {
+      const booking = await Booking.findOne({ bookingId: delivery.bookingId }).populate('customerId', 'emailId firstName lastName');
+      if (booking) {
+        customer = booking.customerId;
+        emailSourceData = {
+          ...booking.toObject(),
+          firstName: customer?.firstName,
+          lastName: customer?.lastName
+        };
+      }
     }
 
-    const customer = booking.customerId;
-
-    if (!customer?.emailId) {
-      return res.status(400).json({ message: 'Customer email not available' });
+    // CASE 2: If deliveryType is Quotation
+    if (!emailSourceData && delivery.deliveryType === 'Quotation') {
+      const quotation = await Quotation.findOne({ bookingId: delivery.quotationId }).populate('customerId', 'emailId firstName lastName');
+      if (quotation) {
+        customer = quotation.customerId;
+        emailSourceData = {
+          ...quotation.toObject(),
+          firstName: customer?.firstName,
+          lastName: customer?.lastName
+        };
+      }
     }
 
-    // Step 3: Send the booking confirmation email
-    await sendDeliverySuccessEmail(customer.emailId, {
-      ...booking.toObject(),
-      firstName: customer.firstName,
-      lastName: customer.lastName
-    });
+    if (!emailSourceData || !customer?.emailId) {
+      return res.status(404).json({ message: 'Neither Booking nor Quotation found for this order, or customer email missing' });
+    }
 
-    res.status(200).json({ message: 'Booking confirmation email sent successfully' });
+    // Send email
+    await sendDeliverySuccessEmail(customer.emailId, emailSourceData);
+
+    res.status(200).json({ message: 'Delivery success email sent successfully' });
   } catch (error) {
-    console.error('Error sending booking email by orderId:', error);
+    console.error('Error in sendDeliverySuccessByOrderId:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
 
 // Count Deliveries
 export const countBookingDeliveries = asyncHandler(async (req, res) => {
@@ -392,7 +388,9 @@ export const countFinalDeliveries = asyncHandler(async (req, res) => {
 });
 
 export const listFinalDeliveries = asyncHandler(async (req, res) => {
-  const deliveries = await Delivery.find({ status: "Final Delivery" })
+  const deliveries = await Delivery.find({ status: "Final Delivery" }).populate([
+     { path: "vehicleModel", select: "vehicleModel" },
+  ])
     console.log("d",deliveries);
 
   const data = deliveries.map((delivery, i) => ({
@@ -401,7 +399,7 @@ export const listFinalDeliveries = asyncHandler(async (req, res) => {
     pickup: delivery.pickup,  // Renamed from startStation
     drop: delivery.drop || "N/A",     // Renamed from endStation
     driverName: delivery.driverName || "N/A",
-    vehicle: delivery.vehicleId?.vehicleName || "N/A",              // vehicleId → vehicleName
+    vehicle: delivery.vehicleModel || "N/A",              // vehicleId → vehicleName
   }));
 
   res.status(200).json(new ApiResponse(200, data, "Final delivery list fetched successfully."));

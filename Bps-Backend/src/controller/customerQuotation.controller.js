@@ -410,7 +410,7 @@ export const sendBookingEmail = async (email, booking) => {
     toCity,
     toPincode,
     productDetails,
-    grandTotal
+   amount
   } = booking;
 
   let productDetailsText = '';
@@ -433,7 +433,7 @@ export const sendBookingEmail = async (email, booking) => {
             <li><strong>Name:</strong> ${product.name}, <strong>Weight:</strong> ${product.weight}, <strong>Quantity:</strong> ${product.quantity}, <strong>Price:</strong> ${product.price}</li>
           `).join('')}
         </ul>
-        <p><strong>Grand Total:</strong> ${grandTotal}</p>
+        <p><strong>Grand Total:</strong> ${amount}</p>
         <p>Thank you for choosing our service.</p>
         <p>Best regards,<br>BharatParcel Team</p>
       `
