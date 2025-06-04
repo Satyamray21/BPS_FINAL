@@ -37,7 +37,7 @@ import { useSelector, useDispatch } from "react-redux";
 import {
   fetchBookingRequest,
   fetchActiveBooking,
-  fetchCancelledBooking, deleteBooking
+  fetchCancelledBooking, deleteBooking,sendWhatsAppMsg,sendBookingEmail
 } from "../../../features/quotation/quotationSlice";
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import SendIcon from '@mui/icons-material/Send';
@@ -138,7 +138,10 @@ const QuotationCard = () => {
     setPage(0);
   };
 
-
+  const handleSend = (bookingId) =>{
+    dispatch(sendWhatsAppMsg(bookingId))
+    dispatch(sendBookingEmail(bookingId))
+  }
   const filteredRows = Array.isArray(bookingList)
     ? bookingList.filter((row) => {
       return (
@@ -320,7 +323,7 @@ const QuotationCard = () => {
                 .map((row, index) => (
                   <TableRow key={row._id || index} hover>
                     <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                    <TableCell>{row.order}</TableCell>
+                    <TableCell>{row.orderBy}</TableCell>
                     <TableCell>{row.Date}</TableCell>
                     <TableCell>{row.Name}</TableCell>
                     <TableCell>{row.pickup}</TableCell>
@@ -348,7 +351,7 @@ const QuotationCard = () => {
                           <DeleteIcon fontSize="small" />
                         </IconButton>
                         <IconButton size="small" color="primary">
-                          <SendIcon fontSize="small" />
+                          <SendIcon fontSize="small"  onClick = {()=>{handleSend(row['Booking ID'])}}/>
                         </IconButton>
                       </Box>
                     </TableCell>
