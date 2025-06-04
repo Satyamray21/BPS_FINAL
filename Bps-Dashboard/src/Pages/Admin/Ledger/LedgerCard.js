@@ -22,6 +22,12 @@ const LedgerCard = () => {
         { value: 'Quotation', label: 'Quotation Order' },
     ];
 
+const handleSubmit = (bookingIds) => {
+    console.log("Generating for IDs:", bookingIds);
+    
+        dispatch(generateInvoices({bookingIds}));
+    
+};
 
 
     return (
@@ -93,7 +99,8 @@ const LedgerCard = () => {
                                         indeterminate={selectedRows.length > 0 && selectedRows.length < rows.length}
                                         onChange={(e) => {
                                             if (e.target.checked) {
-                                                setSelectedRows(rows.map(row => row.id));
+                                                setSelectedRows(rows.map(row => row.bookingId));
+
                                             } else {
                                                 setSelectedRows([]);
                                             }
@@ -166,7 +173,7 @@ const LedgerCard = () => {
             </Box>
 
             <Box mt={2}>
-                <Button variant="contained" color="success">
+                <Button variant="contained" color="success" onClick={() => handleSubmit(selectedRows)}>
                     Submit
                 </Button>
             </Box>

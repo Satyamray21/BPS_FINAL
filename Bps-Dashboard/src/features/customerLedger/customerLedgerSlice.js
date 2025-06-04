@@ -30,15 +30,15 @@ export const previewInvoices = createAsyncThunk(
 /** Generate invoices by marking them as generated */
 export const generateInvoices = createAsyncThunk(
     'ledger/generateInvoices',
-    async ({ bookingIds, paidAmount, remainingAmount }, thunkAPI) => {
+    async ({ bookingIds }, thunkAPI) => {
         try {
             const res = await axios.post(`${BASE_URL}/generate`, {
                 bookingIds,
-                paidAmount,
-                remainingAmount,
+                
             });
             return res.data;
         } catch (err) {
+            console.log(err.response?.data?.message);
             return thunkAPI.rejectWithValue(err.response?.data?.message || 'Failed to generate invoices');
         }
     }
