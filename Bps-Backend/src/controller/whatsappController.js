@@ -131,7 +131,7 @@ export const sendQuotationConfirmation = async (req, res) => {
     const message = generateQuotationMessage(customer, quotation);
     const contact = String(customer.contactNumber);
     const formattedNumber = contact.startsWith('+') ? contact : `+91${contact}`;
-
+    console.log("f",formattedNumber);
     await sendWhatsAppMessage(formattedNumber, message);
 
     res.status(200).json({ success: true, message: 'Quotation confirmation sent successfully' });

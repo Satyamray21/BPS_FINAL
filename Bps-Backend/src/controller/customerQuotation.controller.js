@@ -10,6 +10,7 @@ const formatQuotations = (quotations) => {
   return quotations.map((q, index) => ({
     "S.No.": index + 1,
     "Booking ID": q.bookingId,
+    "orderBy": q.createdByRole || 'N/A',
     "Date": q.quotationDate ? q.quotationDate.toISOString().split("T")[0] : "",
     "Name": q.customerId
       ? `${q.customerId.firstName} ${q.customerId.lastName}`
@@ -446,4 +447,35 @@ export const sendBookingEmail = async (email, booking) => {
   }
 
 
+};
+export const sendBookingEmailById = async (req, res) => {
+  const { bookingId } = req.params;
+
+  try {
+    // Populate the 'customerId' field with email and name
+    const booking = await Quotation.findOne({ bookingId }).populate('customerId', 'emailId firstName lastName');
+
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+
+    // Check populated customer data
+    const customer = booking.customerId;
+
+    if (!customer?.emailId) {
+      return res.status(400).json({ message: 'Customer email not available' });
+    }
+
+    // Send the email
+    await sendBookingEmail(customer.emailId, {
+      ...booking.toObject(),
+      firstName: customer.firstName,
+      lastName: customer.lastName
+    });
+
+    res.status(200).json({ message: 'Booking confirmation email sent successfully' });
+  } catch (error) {
+   console.error('Error sending booking email by ID:', bookingId, error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 };

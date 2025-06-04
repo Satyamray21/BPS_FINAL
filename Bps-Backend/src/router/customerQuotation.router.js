@@ -16,6 +16,7 @@ import {
   RequestBookingList,
   updateQuotationStatus,
   sendBookingEmail,
+  sendBookingEmailById
 
 } from "../controller/customerQuotation.controller.js";
 import { parseFormData } from "../middleware/multerParser.middleware.js";
@@ -46,7 +47,7 @@ router.get("/cancelled-list", verifyJwt, getCancelledList);
 
 router.get("/revenue-list", verifyJwt, getRevenue)
 
-router.get("/send-Booking-Email", sendBookingEmail)
+router.get("/send-Booking-Email/:bookingId", sendBookingEmailById)
 
 router.get("/booking-request-list", verifyJwt, RequestBookingList)
 
