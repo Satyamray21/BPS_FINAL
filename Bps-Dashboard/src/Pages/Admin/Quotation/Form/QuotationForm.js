@@ -456,23 +456,32 @@ const QuotationForm = () => {
                     />
                   </Grid>
                   <Grid size={{ xs: 12, md: 3 }}>
-                    <Grid container spacing={2}>
-                      {[
-                        ["grandTotal", "Grand Total"],
-                      ].map(([name, label]) => (
-                        <Grid size={{ xs: 6 }} key={name}>
-                          <TextField
-                            name={name}
-                            label={label}
-                            value={values.grandTotal}
-                  InputProps={{ readOnly: true }}
-                            fullWidth
-                            size="small"
-                          />
-                        </Grid>
-                      ))}
-                    </Grid>
-                  </Grid>
+  <Grid container spacing={2}>
+    <Grid item xs={6}>
+      <TextField
+        name="amount"
+        label="Amount"
+        value={values.amount}
+        InputProps={{ readOnly: true }}
+        fullWidth
+        size="small"
+      />
+    </Grid>
+    <Grid item xs={6}>
+      <TextField
+        name="grandTotal"
+        label="Grand Total"
+        value={values.grandTotal}
+        InputProps={{ readOnly: true }}
+        fullWidth
+        size="small"
+      />
+    </Grid>
+  </Grid>
+</Grid>
+
+                    
+                    
 
                   <Grid size={{ xs: 12 }}>
                     <Button
@@ -533,22 +542,23 @@ const EffectSyncCities = ({ values, dispatch, setSenderCities, setReceiverCities
 
   return null;
 };
-const EffectSyncTotal=({values,setFieldValue})=>{
-useEffect(() => {
-  let totalAmount = 0;
+const EffectSyncTotal = ({ values, setFieldValue }) => {
+  useEffect(() => {
+    let totalAmount = 0;
 
-  values.productDetails.forEach((item) => {
-    const amount = parseFloat(item.price) || 0;
-    totalAmount += amount;
-  });
+    values.productDetails.forEach((item) => {
+      const amount = parseFloat(item.price) || 0;
+      totalAmount += amount;
+    });
 
-  const stax = parseFloat(values.sTax) || 0;
-  const amount = totalAmount + stax;
+    const sTax = parseFloat(values.sTax) || 0;
+    const grandTotal = totalAmount + sTax;
 
-  //setFieldValue("billTotal", totalAmount.toFixed(2));
-  setFieldValue("grandTotal", amount.toFixed(2));
-}, [values.productDetails, values.sTax]);
-}
+    setFieldValue("amount", totalAmount.toFixed(2));      // Store just the sum of product prices
+    setFieldValue("grandTotal", grandTotal.toFixed(2));   // Add sTax for display
+  }, [values.productDetails, values.sTax]);
+};
+
 
 
 export default QuotationForm;
