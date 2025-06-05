@@ -7,6 +7,7 @@ import { Vehicle } from "../model/vehicle.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Customer } from '../model/customer.model.js';
+import {Driver} from "../model/driver.model.js";
 import nodemailer from 'nodemailer';
 
 // Helper function to generate Order ID
@@ -34,14 +35,14 @@ const populateVehicleAndBooking = (query) => {
     },
   }).populate("vehicleId", "vehicleName"); // Populate Vehicle information with vehicleName
 };
-export const updateDriverAndVehicleAvailability = async (driverName, vehicleModel) => {
+export const updateDriverAndVehicleAvailability = async (driverName, vehicleId) => {
   const activeDriverDeliveries = await Delivery.find({
     driverName,
     status: { $ne: "Completed" },
   });
 
   const activeVehicleDeliveries = await Delivery.find({
-    vehicleModel: vehicleModel,
+    vehicleModel: vehicleId, // vehicleModel actually stores vehicle ID
     status: { $ne: "Completed" },
   });
 
@@ -50,9 +51,10 @@ export const updateDriverAndVehicleAvailability = async (driverName, vehicleMode
   }
 
   if (activeVehicleDeliveries.length === 0) {
-    await Vehicle.updateOne({ _id: vehicleModel }, { isAvailable: true });
+    await Vehicle.updateOne({ _id: vehicleId }, { isAvailable: true });
   }
 };
+
 // Assign a delivery to a booking
 // Assign a delivery to a booking or quotation
 export const assignDelivery = asyncHandler(async (req, res) => {
@@ -72,19 +74,19 @@ export const assignDelivery = asyncHandler(async (req, res) => {
 
   if (bookingIds.length) {
     existingDriverDelivery = await Delivery.findOne({
-      driverName, deliveryType: "Booking", status: { $ne: "Completed" },
+      driverName, deliveryType: "Booking", status: { $nin: ["Completed", "Final Delivery"] },
     });
     existingVehicleDelivery = await Delivery.findOne({
-      vehicleModel: vehicleId, deliveryType: "Booking", status: { $ne: "Completed" },
+      vehicleModel: vehicleId, deliveryType: "Booking", status: {  $nin: ["Completed", "Final Delivery"]},
     });
   }
 
   if (quotationIds.length) {
     existingDriverDelivery = await Delivery.findOne({
-      driverName, deliveryType: "Quotation", status: { $ne: "Completed" },
+      driverName, deliveryType: "Quotation", status: { $nin: ["Completed", "Final Delivery"] },
     });
     existingVehicleDelivery = await Delivery.findOne({
-      vehicleModel: vehicleId, deliveryType: "Quotation", status: { $ne: "Completed" },
+      vehicleModel: vehicleId, deliveryType: "Quotation", status: {  $nin: ["Completed", "Final Delivery"] },
     });
   }
 
@@ -253,8 +255,7 @@ export const listQuotationDeliveries = asyncHandler(async (req, res) => {
 export const finalizeDelivery = asyncHandler(async (req, res) => {
   const { orderId } = req.params; // Getting orderId from params
 
-  
-  const delivery = await Delivery.findOne({ orderId: orderId });
+  const delivery = await Delivery.findOne({ orderId });
 
   if (!delivery) {
     throw new ApiError(404, "Delivery not found with this Order ID.");
@@ -268,19 +269,26 @@ export const finalizeDelivery = asyncHandler(async (req, res) => {
   delivery.status = "Final Delivery";
   await delivery.save();
 
-  // Update the associated booking to reflect no delivery assigned
-  const booking = await Booking.findOne({ bookingId: delivery.bookingId });
-
-  if (booking) {
-    booking.deliveryAssigned = false;
-    await booking.save();
+  // Set activeDelivery to false for both Booking and Quotation types
+  if (delivery.deliveryType === "Booking" && delivery.bookingId) {
+    await Booking.updateOne({ bookingId: delivery.bookingId }, { activeDelivery: false });
   }
-   await updateDriverAndVehicleAvailability(delivery.driverName, delivery.vehicleModel)
-  res.status(200).json(new ApiResponse(200, {
-    orderId: delivery.orderId,
-    status: "Final Delivery",
-  }, "Delivery marked as final."));
+
+  if (delivery.deliveryType === "Quotation" && delivery.quotationId) {
+    await Quotation.updateOne({ bookingId: delivery.quotationId }, { activeDelivery: false });
+  }
+
+  // Update availability
+  await updateDriverAndVehicleAvailability(delivery.driverName, delivery.vehicleModel);
+
+  res.status(200).json(
+    new ApiResponse(200, {
+      orderId: delivery.orderId,
+      status: "Final Delivery",
+    }, "Delivery marked as final.")
+  );
 });
+
 export const sendDeliverySuccessEmail = async (email, booking) => {
   const {
     firstName,
