@@ -303,8 +303,8 @@ export const getCancelledList = asyncHandler(async (req, res) => {
 // Controller to get revenue details from quotations
 // Controller to get total revenue from quotations
 export const getRevenue = asyncHandler(async (req, res) => {
-  const filter = getBookingFilterByType('request', req.user);
-  const quotations = await Quotation.find(filter)
+ 
+  const quotations = await Quotation.find(req.roleQueryFilter)
     .select('bookingId quotationDate startStationName endStation grandTotal computedTotalRevenue amount sTax')
     .lean();
 
