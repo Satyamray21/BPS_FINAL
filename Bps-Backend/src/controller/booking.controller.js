@@ -602,9 +602,9 @@ export const cancelBooking = async (req, res) => {
 export const getBookingRevenueList = async (req, res) => {
   try {
     const user = req.user;
-    const filter = getBookingFilterByType('request', user); // Use shared logic
+    
 
-    const bookings = await Booking.find(filter)
+    const bookings = await Booking.find(req.roleQueryFilter)
       .select('bookingId bookingDate startStation endStation grandTotal')
       .populate('startStation endStation', 'stationName')
       .lean();
