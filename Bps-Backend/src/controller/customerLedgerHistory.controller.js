@@ -112,12 +112,12 @@ export const generateInvoices = async (req, res) => {
  */
 export const getAllInvoices = async (req, res) => {
   try {
-    const bookings = await Booking.find({...req.roleQueryFilter, invoiceGenerated: true }).populate(
+    const bookings = await Booking.find({ ...req.roleQueryFilter, invoiceGenerated: true }).populate(
       "customerId",
       "firstName lastName"
     );
 
-    const quotations = await Quotation.find({...req.roleQueryFilter, invoiceGenerated: true }).populate(
+    const quotations = await Quotation.find({ ...req.roleQueryFilter, invoiceGenerated: true }).populate(
       "customerId",
       "firstName lastName"
     );
@@ -127,10 +127,13 @@ export const getAllInvoices = async (req, res) => {
     const invoiceList = allInvoices.map((invoice, index) => {
       const invoiceId = `BHPAR${String(index + 1).padStart(4, "0")}INVO`;
 
-      const totalAmount = invoice.amount;
-      const paidAmount = invoice.paidAmount ?? (invoice.amount - (invoice.remainingAmount ?? 0));
-      const remainingAmount = invoice.remainingAmount ?? (invoice.amount - paidAmount);
+      const totalAmount = invoice.grandTotal || invoice.amount || 0;
 
+      // If ANY item is marked 'pay', full amount is due
+      const hasToPay = invoice.items?.some(item => item.toPay === 'pay');
+
+      const paidAmount = hasToPay ? 0 : totalAmount;
+      const remainingAmount = hasToPay ? totalAmount : 0;
 
       const customerName = invoice.customerId
         ? `${invoice.customerId.firstName} ${invoice.customerId.lastName}`
