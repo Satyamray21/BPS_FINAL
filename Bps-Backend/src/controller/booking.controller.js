@@ -181,6 +181,10 @@ export const createPublicBooking = async (req, res) => {
   try {
     const {
       email,
+      firstName,
+      middleName,
+      lastName,
+      mobile,
       startStation: startName,
       endStation: endName,
       bookingDate,
@@ -221,6 +225,10 @@ export const createPublicBooking = async (req, res) => {
 
     // Create booking without customerId
     const booking = new Booking({
+      firstName,
+      middleName,
+      lastName,
+      mobile,
       startStation,
       endStation,
       bookingDate,
@@ -246,6 +254,7 @@ export const createPublicBooking = async (req, res) => {
       igst,
       billTotal,
       grandTotal,
+      mobile,
       email, // store for reference
       isApproved: false, // pending approval
       requestedByRole: "public"
@@ -576,6 +585,34 @@ export const approveThirdPartyBookingRequest = async (req, res) => {
   }
 };
 
+export const rejectThirdPartyBookingRequest = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const user = req.user;
+
+   
+    
+
+   
+    const booking = await Booking.findOne({ bookingId });
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    
+    if (booking.isApproved) {
+      return res.status(400).json({ message: "Booking already approved, cannot reject" });
+    }
+
+    
+
+    await Booking.deleteOne({ bookingId });
+    res.status(200).json({ message: "Booking rejected successfully", booking });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.message || "Server error" });
+  }
+};
 
 
 // PATCH /api/v2/bookings/:bookingId/cancel

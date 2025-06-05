@@ -17,17 +17,28 @@ import {
     Button,
     Card,
 } from '@mui/material';
+import {
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    TextField,
+} from '@mui/material';
+import LockResetIcon from '@mui/icons-material/LockReset';
 import LogoutIcon from '@mui/icons-material/Logout';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useNavigate } from 'react-router-dom';
-import {useDispatch,useSelector} from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
-import {pendingList,approveList} from '../features/booking/bookingSlice'
+import { pendingList, approveList,rejectThridParty } from '../features/booking/bookingSlice'
+import { changePassword } from '../features/user/userSlice';
+
+
 const AppBarHeader = () => {
-    const dispatch  = useDispatch();
-    const {list:pending} = useSelector(state=>state.bookings);
+    const dispatch = useDispatch();
+    const { list2: pending } = useSelector(state => state.bookings);
     const navigate = useNavigate();
     const [anchorEl, setAnchorEl] = useState(null);
     const [notifAnchorEl, setNotifAnchorEl] = useState(null);
@@ -37,40 +48,73 @@ const AppBarHeader = () => {
     const notifOpen = Boolean(notifAnchorEl);
     const userRole = localStorage.getItem('userRole');
 
+    const [openChangePassword, setOpenChangePassword] = useState(false);
+    const [oldPassword, setOldPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+
+    const handleChangePassword = async () => {
+        if (!oldPassword || !newPassword || !confirmPassword) {
+            alert('Please fill in all fields.');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            alert('New passwords do not match!');
+            return;
+        }
+
+        try {
+            const result = await dispatch(changePassword({ oldpassword: oldPassword, newPassword }));
+
+            if (result.type === 'auth/changePassword/fulfilled') {
+                alert('Password changed successfully!');
+                setOpenChangePassword(false);
+                setOldPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
+            } else {
+                alert(result.payload || 'Failed to change password');
+            }
+        } catch (err) {
+            alert('Something went wrong');
+        }
+    };
+
     useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-        axios.get('http://localhost:8000/api/v2/users/profile', {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        })
-        .then(response => {
-            setUser(response.data.message);
-        })
-        .catch(error => {
-            console.error('Failed to fetch profile:', error);
-            setUser(null);
-        });
-    }
-
-    
-    dispatch(pendingList());
-
-}, [dispatch]);
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            axios.get('http://localhost:8000/api/v2/users/profile', {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            })
+                .then(response => {
+                    setUser(response.data.message);
+                })
+                .catch(error => {
+                    console.error('Failed to fetch profile:', error);
+                    setUser(null);
+                });
+        }
 
 
-useEffect(() => {
-    console.log("Pending bookings:", pending);
-    if (pending && pending.length > 0) {
-        const exampleNotifications = pending.map(booking => ({
-            id: booking.bookingId,
-            type: 'Booking',
-            message: booking.firstName,
-        }));
-        setNotifications(exampleNotifications);
-    }
-}, [pending]);
+        dispatch(pendingList());
+
+    }, [dispatch]);
+
+
+    useEffect(() => {
+        console.log("Pending bookings:", pending);
+        if (pending && pending.length > 0) {
+            const exampleNotifications = pending.map(booking => ({
+                id: booking.bookingId,
+                type: 'Booking',
+                message: booking.firstName,
+            }));
+            setNotifications(exampleNotifications);
+        }
+    }, [pending]);
 
     const handleOpenMenu = (event) => {
         setAnchorEl(event.currentTarget);
@@ -98,9 +142,8 @@ useEffect(() => {
         dispatch(approveList(bookingId))
     };
 
-    const handleReject = (id) => {
-        console.log(`Rejected notification with ID: ${id}`);
-        setNotifications(prev => prev.filter(n => n.id !== id));
+    const handleReject = (bookingId) => {
+      dispatch(rejectThridParty(bookingId))
     };
 
     const getNotifIcon = (type) => {
@@ -108,9 +151,10 @@ useEffect(() => {
         return <NotificationsIcon />;
     };
     const handleView = (bookingId) => {
-    
-    navigate(`/booking/${bookingId}`);
-  };
+        handleNotifClose();
+        navigate(`/booking/${bookingId}`);
+    };
+
     return (
         <AppBar position="static" sx={{ zIndex: 1201, bgcolor: '#1976d2' }}>
             <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -187,7 +231,52 @@ useEffect(() => {
                         </ListItemIcon>
                         <Typography color="error">Logout</Typography>
                     </MenuItem>
+
+                    <MenuItem onClick={() => setOpenChangePassword(true)}>
+                        <ListItemIcon>
+                            <LockResetIcon fontSize="small" color="primary" />
+                        </ListItemIcon>
+                        <Typography>Change Password</Typography>
+                    </MenuItem>
                 </Menu>
+
+                <Dialog open={openChangePassword} onClose={() => setOpenChangePassword(false)} fullWidth maxWidth="xs">
+                    <DialogTitle>Change Password</DialogTitle>
+                    <DialogContent>
+                        <Box display="flex" flexDirection="column" gap={2} mt={1}>
+                            <TextField
+                                type="password"
+                                label="Old Password"
+                                fullWidth
+                                value={oldPassword}
+                                onChange={(e) => setOldPassword(e.target.value)}
+                            />
+                            <TextField
+                                type="password"
+                                label="New Password"
+                                fullWidth
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                            />
+                            <TextField
+                                type="password"
+                                label="Confirm New Password"
+                                fullWidth
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                            />
+                        </Box>
+                    </DialogContent>
+                    <DialogActions sx={{ px: 3, pb: 2 }}>
+                        <Button onClick={() => setOpenChangePassword(false)} variant="outlined">
+                            Cancel
+                        </Button>
+                        <Button onClick={handleChangePassword} variant="contained" color="primary">
+                            Update Password
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
 
                 {/* Notification Menu */}
                 <Menu

@@ -16,6 +16,7 @@ import {
   createPublicBooking,
   getPendingThirdPartyBookings,
   approveThirdPartyBookingRequest,
+  rejectThirdPartyBookingRequest,
   sendBookingEmailById
 } from '../controller/booking.controller.js';
 
@@ -31,7 +32,7 @@ router.get('/bookings/count/cancelled', verifyJwt, getCancelledBookingsCount);
 router.get('/bookings/revenue/total', verifyJwt, getTotalRevenue);
 router.post('/send-booking-email', sendBookingEmail);
 router.post('/send-booking-email/:bookingId', sendBookingEmailById);
-
+router.patch('/reject/:bookingId',rejectThirdPartyBookingRequest);
 
 //  CRUD routes AFTER static routes
 router.post('/public', createPublicBooking);
