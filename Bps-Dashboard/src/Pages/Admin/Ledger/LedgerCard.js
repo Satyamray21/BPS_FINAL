@@ -136,7 +136,7 @@ const handleSubmit = (bookingIds) => {
                                     <TableCell>{row.date}</TableCell>
                                     <TableCell>{row.bookingId}</TableCell>
                                     <TableCell>{row.pickupLocation}</TableCell>
-                                    <TableCell>{row.dropLocation?.stationName || "N/A"}</TableCell>
+                                    <TableCell>{row.dropLocation || row.dropLocation?.stationName || "N/A"}</TableCell>
                                     <TableCell>
                                         <Button variant="outlined" size="small">View</Button>
                                     </TableCell>

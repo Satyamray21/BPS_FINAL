@@ -37,7 +37,7 @@ import { useSelector, useDispatch } from "react-redux";
 import {
   fetchBookingRequest,
   fetchActiveBooking,
-  fetchCancelledBooking, deleteBooking,sendWhatsAppMsg,sendBookingEmail
+  fetchCancelledBooking, deleteBooking,sendWhatsAppMsg,sendBookingEmail,revenueList
 } from "../../../features/quotation/quotationSlice";
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import SendIcon from '@mui/icons-material/Send';
@@ -91,9 +91,14 @@ const QuotationCard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedList, setSelectedList] = useState("request");
 
-  const { list: bookingList = [], requestCount, activeDeliveriesCount, cancelledDeliveriesCount } =
+  const { list: bookingList = [], requestCount, activeDeliveriesCount, cancelledDeliveriesCount,totalRevenue } =
     useSelector((state) => state.quotations);
-
+   useEffect(()=>{
+    dispatch(fetchBookingRequest());
+    dispatch(fetchCancelledBooking());
+    dispatch(fetchActiveBooking());
+    dispatch(revenueList());
+   },[dispatch])
   useEffect(() => {
     switch (selectedList) {
       case "request":
@@ -104,6 +109,9 @@ const QuotationCard = () => {
         break;
       case "cancelled":
         dispatch(fetchCancelledBooking());
+        break;
+        case "reveune":
+        dispatch(revenueList());
         break;
       default:
         break;
@@ -184,10 +192,10 @@ const QuotationCard = () => {
     },
     {
       id: "revenue",
-      title: "0.00",
-      value: "Rs.",
+      value: totalRevenue,
       subtitle: "Total Revenue",
       duration: "100% (30 Days)",
+      type:"reveune",
       icon: <AccountBalanceWalletIcon fontSize="large" />,
     },
   ];
