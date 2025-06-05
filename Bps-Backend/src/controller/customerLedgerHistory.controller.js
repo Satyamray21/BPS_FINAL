@@ -29,7 +29,7 @@ export const previewInvoices = async (req, res) => {
       })
         .populate("startStation", "stationName")
         .populate("endStation", "stationName")
-        .select("bookingId bookingDate startStation endStation amount");
+        .select("bookingId bookingDate startStation endStation items grandTotal");
     } else if (orderType === "Quotation") {
       orders = await Quotation.find({
         ...req.roleQueryFilter,
@@ -38,19 +38,30 @@ export const previewInvoices = async (req, res) => {
       })
         .populate("startStation", "stationName")
         .populate("endStation", "stationName")
-        .select("bookingId quotationDate startStation endStation amount");
+        .select("bookingId quotationDate startStation endStation items amount");
     } else {
       return res.status(400).json({ message: "Invalid order type" });
     }
 
-    const invoicePreview = orders.map((order, index) => ({
-      sno: index + 1,
-      bookingId: order.bookingId,
-      date: order.bookingDate || order.quotationDate,
-      pickupLocation: order.startStation?.stationName || "",
-      dropLocation: order.endStation,
-      amount: order.amount,
-    }));
+    // Map to include paid & remaining amount logic
+    const invoicePreview = orders.map((order, index) => {
+      const hasToPay = order.items?.some(item => item.toPay === "pay");
+      const totalAmount = order.grandTotal || order.amount || 0;
+
+      const paidAmount = hasToPay ? 0 : totalAmount;
+      const remainingAmount = hasToPay ? totalAmount : 0;
+
+      return {
+        sno: index + 1,
+        bookingId: order.bookingId,
+        date: order.bookingDate || order.quotationDate,
+        pickupLocation: order.startStation?.stationName || "",
+        dropLocation: order.endStation?.stationName || "",
+        amount: totalAmount,
+        paidAmount,
+        remainingAmount
+      };
+    });
 
     return res.status(200).json(invoicePreview);
   } catch (error) {
@@ -59,50 +70,80 @@ export const previewInvoices = async (req, res) => {
   }
 };
 
+
 /**
  * Mark specific invoices as generated
  * Requires bookingId[] and orderType
  */
 export const generateInvoices = async (req, res) => {
   try {
-    const { bookingIds, paidAmount, remainingAmount } = req.body;
+    const { bookingIds } = req.body;
 
     if (!Array.isArray(bookingIds) || bookingIds.length === 0) {
       return res.status(400).json({ message: "No booking IDs provided" });
     }
 
-    const bookingUpdate = await Booking.updateMany(
-      { bookingId: { $in: bookingIds } },
-      {
-        $set: {
-          invoiceGenerated: true,
-          paidAmount: paidAmount,
-          remainingAmount: remainingAmount,
-        },
-      }
-    );
+    // Fetch all bookings and quotations matching the IDs
+    const bookings = await Booking.find({ bookingId: { $in: bookingIds } });
+    const quotations = await Quotation.find({ bookingId: { $in: bookingIds } });
 
-    const quotationUpdate = await Quotation.updateMany(
-      { bookingId: { $in: bookingIds } },
-      {
-        $set: {
-          invoiceGenerated: true,
-          paidAmount: paidAmount,
-          remainingAmount: remainingAmount,
-        },
-      }
-    );
+    // Helper function to determine payment fields
+    const determinePaymentStatus = (entry) => {
+      const hasToPay = entry.items?.some(item => item.toPay === 'pay');
+      const totalAmount = entry.grandTotal || entry.amount || 0;
 
-    const updatedCount = bookingUpdate.modifiedCount + quotationUpdate.modifiedCount;
+      return {
+        paidAmount: hasToPay ? 0 : totalAmount,
+        remainingAmount: hasToPay ? totalAmount : 0,
+        totalAmount,
+      };
+    };
+
+    // Prepare booking update promises
+    const bookingPromises = bookings.map(b => {
+      const { paidAmount, remainingAmount } = determinePaymentStatus(b);
+      return Booking.updateOne(
+        { _id: b._id },
+        {
+          $set: {
+            invoiceGenerated: true,
+            paidAmount,
+            remainingAmount,
+          }
+        }
+      );
+    });
+
+    // Prepare quotation update promises
+    const quotationPromises = quotations.map(q => {
+      const { paidAmount, remainingAmount } = determinePaymentStatus(q);
+      return Quotation.updateOne(
+        { _id: q._id },
+        {
+          $set: {
+            invoiceGenerated: true,
+            paidAmount,
+            remainingAmount,
+          }
+        }
+      );
+    });
+
+    // Execute all updates in parallel
+    const results = await Promise.all([...bookingPromises, ...quotationPromises]);
+
+    const updatedCount = results.reduce((sum, r) => sum + (r.modifiedCount || 0), 0);
 
     return res.status(200).json({
-      message: `Invoices generated for ${updatedCount} records`,
+      message: `Invoices generated for ${updatedCount} records`
     });
+
   } catch (error) {
     console.error("Error generating invoices:", error);
     return res.status(500).json({ message: "Error generating invoices" });
   }
 };
+
 
 
 
