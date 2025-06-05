@@ -473,6 +473,7 @@ export const getBookingStatusList = async (req, res) => {
 
       filter = {
         activeDelivery: false,
+        isDelivered: { $ne: true },
         totalCancelled: 0,
         $or: [
           { createdByRole: { $in: ['admin', 'supervisor'] } }, // Always include bookings created by admin/supervisor

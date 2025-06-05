@@ -144,6 +144,10 @@ const quotationSchema = new mongoose.Schema({
     type: String,
 
   },
+  isDelivered: {
+  type: Boolean,
+  default: false,
+},
 }, { timestamps: true });
 
 

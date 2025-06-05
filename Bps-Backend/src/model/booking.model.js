@@ -234,7 +234,13 @@ const BookingSchema = new mongoose.Schema(
     isApproved: { type: Boolean, default: false },
     requestedByRole: { type: String, default: 'public' },
     approvedBy: { type: String },
-    approvedAt: { type: Date }
+    approvedAt: { type: Date },
+    
+    isDelivered: {
+  type: Boolean,
+  default: false,
+}
+
 
   },
   { timestamps: true }

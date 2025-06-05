@@ -38,6 +38,7 @@ const getBookingFilterByType = (type, user) => {
   } else {
     baseFilter = {
       activeDelivery: false,
+      isDelivered: { $ne: true },
       totalCancelled: 0,
       $or: [
         { createdByRole: { $in: ['admin', 'supervisor'] } },

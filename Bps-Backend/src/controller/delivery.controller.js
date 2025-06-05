@@ -271,11 +271,11 @@ export const finalizeDelivery = asyncHandler(async (req, res) => {
 
   // Set activeDelivery to false for both Booking and Quotation types
   if (delivery.deliveryType === "Booking" && delivery.bookingId) {
-    await Booking.updateOne({ bookingId: delivery.bookingId }, { activeDelivery: false });
+    await Booking.updateOne({ bookingId: delivery.bookingId }, { activeDelivery: false,isDelivered: true  });
   }
 
   if (delivery.deliveryType === "Quotation" && delivery.quotationId) {
-    await Quotation.updateOne({ bookingId: delivery.quotationId }, { activeDelivery: false });
+    await Quotation.updateOne({ bookingId: delivery.quotationId }, { activeDelivery: false,isDelivered: true  });
   }
 
   // Update availability
