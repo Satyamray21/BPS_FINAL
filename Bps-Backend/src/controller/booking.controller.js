@@ -495,7 +495,7 @@ export const getBookingStatusList = async (req, res) => {
 
     const bookings = await Booking.find(filter)
 
-      .select('bookingId firstName lastName senderName receiverName bookingDate mobile startStation endStation')
+      .select('bookingId firstName lastName senderName receiverName bookingDate mobile startStation endStation requestedByRole')
       .populate('startStation endStation', 'stationName')
       .populate('createdByRole', ' role')
       .lean();
@@ -505,7 +505,10 @@ export const getBookingStatusList = async (req, res) => {
 
     const data = validBookings.map((b, i) => ({
       SNo: i + 1,
-      orderBy: b.createdByRole || 'N/A',
+      orderBy:
+    b.requestedByRole === 'public'
+      ? 'Third Party'
+      : b.createdByRole || 'N/A',
       date: b.bookingDate?.toISOString().slice(0, 10) || 'N/A',
       fromName: b.senderName || 'N/A',
       pickup: b.startStation?.stationName || 'N/A',
