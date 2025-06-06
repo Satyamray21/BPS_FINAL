@@ -140,10 +140,14 @@ const AppBarHeader = () => {
 
     const handleAccept = (bookingId) => {
         dispatch(approveList(bookingId))
+        window.location.reload();
+
     };
 
     const handleReject = (bookingId) => {
       dispatch(rejectThridParty(bookingId))
+       window.location.reload();
+
     };
 
     const getNotifIcon = (type) => {
