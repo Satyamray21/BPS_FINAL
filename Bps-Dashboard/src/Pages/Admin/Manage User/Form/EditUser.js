@@ -19,8 +19,8 @@ const EditUser = () => {
     const { states, cities } = useSelector((state) => state.location);
     const [form, setForm] = useState({
         firstName: '', middleName: '', lastName: '',
-        contactNumber: '', email: '',
-        address: '', state: '', startStation: '', city: '', distnict: '', pincode: '',
+        contactNumber: '', emailId: '',
+        address: '', state: '', startStation: '', city: '',  distinct: '', pincode: '',
         idProof: '', idPhoto: '', adminPhoto: ''
     });
 
@@ -48,11 +48,11 @@ const EditUser = () => {
                 middleName: userData.middleName || '',
                 lastName: userData.lastName || '',
                 contactNumber: userData.contactNumber || '',
-                email: userData.emailId || '',
+                emailId: userData.emailId || '',
                 address: userData.address || '',
                 state: userData.state || '',
                 city: userData.city || '',
-                district: userData.district || '',
+                 distinct: userData.distinct || '',
                 pincode: userData.pincode || '',
                 idProof: userData.idProof || '',
                 idPhoto: userData.idPhoto || '',
@@ -123,7 +123,7 @@ const EditUser = () => {
             .unwrap()
             .then(() => {
                 alert('Admin updated successfully!');
-                navigate('/user');
+                navigate('/users');
             })
             .catch(err => alert(`Error: ${err}`));
     };
@@ -177,7 +177,7 @@ const EditUser = () => {
                                         <TextField label="Contact" name="contactNumber" value={form.contactNumber} onChange={handleChange} fullWidth />
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
-                                        <TextField label="Email" name="email" value={form.email} onChange={handleChange} fullWidth />
+                                        <TextField label="Email" name="emailId" value={form.emailId} onChange={handleChange} fullWidth />
                                     </Grid>
                                 </Grid>
                             </CardContent>
@@ -273,7 +273,7 @@ const EditUser = () => {
                                         </TextField>
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
-                                        <TextField label="District" name="district" value={form.district} onChange={handleChange} fullWidth />
+                                        <TextField label="District" name="distinct" value={form.distinct} onChange={handleChange} fullWidth />
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
                                         <TextField label="Pincode" name="pincode" value={form.pincode} onChange={handleChange} fullWidth />

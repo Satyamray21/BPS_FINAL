@@ -113,7 +113,7 @@ const UserView = () => {
                                     <StyledTextField label="Middle Name" value={form?.middleName} />
                                     <StyledTextField label="Last Name" value={form?.lastName} />
                                     <StyledTextField label="Contact Number" value={form?.contactNumber} />
-                                    <StyledTextField label="Email" value={form?.email} />
+                                    <StyledTextField label="Email" value={form?.emailId} />
                                 </Grid>
                             </CardContent>
                         </Card>
