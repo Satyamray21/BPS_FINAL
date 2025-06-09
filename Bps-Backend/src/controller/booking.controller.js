@@ -5,6 +5,7 @@ import nodemailer from 'nodemailer';
 import { User } from '../model/user.model.js'
 import {sendBookingConfirmation} from './whatsappController.js'
 import {sendWhatsAppMessage} from '../services/whatsappServices.js'
+import {ApiResponse} from "../utils/ApiResponse.js"
 async function resolveStation(name) {
   const station = await Station.findOne({ stationName: new RegExp(`^${name}$`, 'i') });
   if (!station) throw new Error(`Station "${name}" not found`);
@@ -49,13 +50,9 @@ const getBookingFilterByType = (type, user) => {
   return baseFilter;
 };
 
-/** 
- * View a single booking by its bookingId or _id
- * GET /api/bookings/:id
- */
+
 export const viewBooking = async (req, res) => {
   try {
-    console.log("station name", req.startStation);
     const { id } = req.params;
     const booking = await Booking.findOne({
       $or: [{ bookingId: id }]
@@ -71,10 +68,7 @@ export const viewBooking = async (req, res) => {
   }
 };
 
-/** 
- * Create a new booking
- * POST /api/bookings
- */
+
 export const createBooking = async (req, res) => {
   try {
     const user = req.user;
@@ -316,7 +310,7 @@ export const sendBookingAcknowledgementEmail = async (email, booking) => {
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log(`Acknowledgement email sent to ${email}`);
+    
   } catch (error) {
     console.error('Error sending acknowledgement email:', error);
   }
@@ -369,7 +363,7 @@ export const sendBookingEmail = async (email, booking) => {
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log(`Booking confirmation email sent to ${email}`);
+   
   } catch (error) {
     console.error('Error sending booking confirmation email:', error);
   }
@@ -411,7 +405,7 @@ export const sendBookingEmailById = async (req, res) => {
 
 
 export const updateBooking = async (req, res) => {
-  console.log("Req ", req.body);
+  
   try {
     const { id } = req.params;
     const updates = { ...req.body };
@@ -461,14 +455,7 @@ export const deleteBooking = async (req, res) => {
 };
 
 
-/** 
- * List bookings by “status”
- * GET /api/bookings/booking-list?type=request|active|cancelled
- */
-/** 
- * List bookings by “status”
- * GET /api/bookings/booking-list?type=request|active|cancelled
- */
+
 export const getBookingStatusList = async (req, res) => {
   try {
     const { type } = req.query;
@@ -756,3 +743,56 @@ export const activateBooking = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+
+export const customerWiseData = async(req,res) =>{
+   
+  const {fromDate,endDate} = req.body;
+  const summary = await Booking.aggregate([
+  {
+    $match: {
+      bookingDate: {
+        $gte: new Date(fromDate),
+        $lte: new Date(endDate)
+      }
+    }
+  },
+  {
+    $group: {
+      _id: "$customerId",
+      totalBookings: { $sum: 1 },
+      billTotal: { $sum: "$billTotal" }
+    }
+  },
+  {
+    $lookup: {
+      from: "customers",
+      localField: "_id",
+      foreignField: "_id",
+      as: "customerDetails"
+    }
+  },
+  {
+    $unwind: {
+      path: "$customerDetails",
+      preserveNullAndEmptyArrays: true
+    }
+  },
+  {
+    $project: {
+      customerName: {
+        $concat: [
+          "$customerDetails.firstName", " ",
+          { $ifNull: ["$customerDetails.middleName", ""] }, " ",
+          "$customerDetails.lastName"
+        ]
+      },
+      totalBookings: 1,
+      billTotal: 1
+    }
+  }
+]);
+
+  res.status(200).json(new ApiResponse(200,summary,"Customer booking succesfully fetched sucessfully"));
+}
+;
