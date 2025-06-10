@@ -781,56 +781,113 @@ export const activateBooking = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+export const customerWiseData = async (req, res) => {
+  const { fromDate, endDate } = req.body;
+  const start = new Date(fromDate);
+  start.setHours(0, 0, 0, 0);
 
-
-export const customerWiseData = async(req,res) =>{
-   
-  const {fromDate,endDate} = req.body;
+  const end = new Date(endDate);
+  end.setHours(23, 59, 59, 999);
   const summary = await Booking.aggregate([
-  {
-    $match: {
-      bookingDate: {
-        $gte: new Date(fromDate),
-        $lte: new Date(endDate)
+    {
+      $match: {
+        bookingDate: {
+          $gte: start,
+          $lte: end,
+        }
+      }
+    },
+    {
+      $group: {
+        _id: "$customerId",
+        totalBookings: { $sum: 1 },
+        billTotal: { $sum: "$billTotal" }
+      }
+    },
+    {
+      $lookup: {
+        from: "customers",
+        localField: "_id",
+        foreignField: "_id",
+        as: "customerDetails"
+      }
+    },
+    {
+      $unwind: {
+        path: "$customerDetails",
+        preserveNullAndEmptyArrays: true
+      }
+    },
+    {
+      $addFields: {
+        taxAmount: {
+          $multiply: ["$billTotal", 0.18]
+        }
+      }
+    },
+    {
+      $project: {
+        customerName: {
+          $concat: [
+            "$customerDetails.firstName", " ",
+            { $ifNull: ["$customerDetails.middleName", ""] }, " ",
+            "$customerDetails.lastName"
+          ]
+        },
+        totalBookings: 1,
+        billTotal: 1,
+        taxAmount: 1
       }
     }
-  },
-  {
-    $group: {
-      _id: "$customerId",
-      totalBookings: { $sum: 1 },
-      billTotal: { $sum: "$billTotal" }
-    }
-  },
-  {
-    $lookup: {
-      from: "customers",
-      localField: "_id",
-      foreignField: "_id",
-      as: "customerDetails"
-    }
-  },
-  {
-    $unwind: {
-      path: "$customerDetails",
-      preserveNullAndEmptyArrays: true
-    }
-  },
-  {
-    $project: {
-      customerName: {
-        $concat: [
-          "$customerDetails.firstName", " ",
-          { $ifNull: ["$customerDetails.middleName", ""] }, " ",
-          "$customerDetails.lastName"
-        ]
-      },
-      totalBookings: 1,
-      billTotal: 1
-    }
-  }
-]);
+  ]);
 
-  res.status(200).json(new ApiResponse(200,summary,"Customer booking succesfully fetched sucessfully"));
-}
-;
+  res.status(200).json(
+    new ApiResponse(200, summary, "Customer booking successfully fetched")
+  );
+};
+export const overallBookingSummary = async (req, res) => {
+  try {
+    const { fromDate, endDate } = req.body;
+
+    const summary = await Booking.aggregate([
+      {
+        $match: {
+          isDelivered: true,
+          bookingDate: {
+            $gte: new Date(fromDate),
+            $lte: new Date(endDate)
+          }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalBookings: { $sum: 1 },
+          billTotal: { $sum: "$billTotal" }
+        }
+      },
+      {
+        $addFields: {
+          taxAmount: { $multiply: ["$billTotal", 0.18] }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          totalBookings: 1,
+          billTotal: 1,
+          taxAmount: 1
+        }
+      }
+    ]);
+
+    res.status(200).json(
+      new ApiResponse(200, summary[0] || {}, "Overall booking summary fetched successfully")
+    );
+  } catch (error) {
+    res.status(500).json(new ApiResponse(500, null, "Error fetching overall booking summary"));
+  }
+};
+
+
+
