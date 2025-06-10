@@ -117,6 +117,7 @@ console.log("details",station);
                             <StyledTextField label="State" value={station.state} />
                             <StyledTextField label="City" value={station.city} />
                             <StyledTextField label="Pincode" value={station.pincode} />
+                            <StyledTextField label="GST Number" value={station.gst} />
                         </Grid>
                     </CardContent>
                 </Card>

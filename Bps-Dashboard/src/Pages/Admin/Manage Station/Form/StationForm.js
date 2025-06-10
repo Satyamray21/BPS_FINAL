@@ -24,6 +24,7 @@ const StationForm = ({ open, onClose }) => {
     street: Yup.string(),
     state: Yup.string().required(),
     city: Yup.string().required(),
+    gst:Yup.string().required(),
     pincode: Yup.string().matches(/^\d{6}$/, 'Must be 6 digits').required(),
   });
 
@@ -37,6 +38,7 @@ const StationForm = ({ open, onClose }) => {
       state: '',
       city: '',
       pincode: '',
+      gst:'',
     },
     validationSchema,
     onSubmit: async (values) => {
@@ -94,7 +96,7 @@ const StationForm = ({ open, onClose }) => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid size={{xs:12, sm:6}} >
               <TextField
                 fullWidth label="Contact" name="contact"
                 value={formik.values.contact}
@@ -112,7 +114,7 @@ const StationForm = ({ open, onClose }) => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid size={{xs:12, sm:6}}>
               <TextField
                 fullWidth label="Email" name="emailId" type="email"
                 value={formik.values.emailId}
@@ -130,7 +132,7 @@ const StationForm = ({ open, onClose }) => {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{xs:12, sm:6}}>
               <TextField
                 fullWidth label="Address" name="address" multiline rows={2}
                 value={formik.values.address}
@@ -148,7 +150,7 @@ const StationForm = ({ open, onClose }) => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid size={{xs:12, sm:6}}>
               <FormControl
                 fullWidth
                 error={formik.touched.state && Boolean(formik.errors.state)}
@@ -184,7 +186,7 @@ const StationForm = ({ open, onClose }) => {
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid size={{xs:12, sm:6}}>
               <FormControl
                 fullWidth
                 error={formik.touched.city && Boolean(formik.errors.city)}
@@ -216,7 +218,7 @@ const StationForm = ({ open, onClose }) => {
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid size={{xs:12, sm:6}}>
               <TextField
                 fullWidth label="PIN Code" name="pincode"
                 value={formik.values.pincode}
@@ -224,6 +226,23 @@ const StationForm = ({ open, onClose }) => {
                 onBlur={formik.handleBlur}
                 error={formik.touched.pincode && Boolean(formik.errors.pincode)}
                 helperText={formik.touched.pincode && formik.errors.pincode}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PinDrop color="action" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+            <Grid size={{xs:12, sm:6}}>
+              <TextField
+                fullWidth label="GST Number" name="gst"
+                value={formik.values.gst}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.gst && Boolean(formik.errors.gst)}
+                helperText={formik.touched.gst && formik.errors.gst}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">

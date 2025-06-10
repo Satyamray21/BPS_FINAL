@@ -57,11 +57,49 @@ export const viewBooking = async (req, res) => {
     const booking = await Booking.findOne({
       $or: [{ bookingId: id }]
     })
-      .populate('startStation endStation', 'stationName')
+      .populate('startStation', 'stationName gst')
+      .populate('endStation', 'stationName')
       .lean();
 
     if (!booking) return res.status(404).json({ message: 'Booking not found' });
-    res.json(booking);
+
+    // Extract only the necessary fields
+    const simplifiedResponse = {
+      bookingId: booking.bookingId,
+      firstName: booking.firstName,
+      lastName: booking.lastName,
+      mobile: booking.mobile,
+      email: booking.email,
+      bookingDate: booking.bookingDate,
+      deliveryDate: booking.deliveryDate,
+      senderName: booking.senderName,
+      senderGgt: booking.senderGgt,
+      fromState: booking.fromState,
+      fromCity: booking.fromCity,
+      senderPincode: booking.senderPincode,
+      receiverName: booking.receiverName,
+      receiverGgt: booking.receiverGgt,
+      toState: booking.toState,
+      toCity: booking.toCity,
+      toPincode: booking.toPincode,
+      items: booking.items,
+      freight: booking.freight,
+      ins_vpp: booking.ins_vpp,
+      cgst: booking.cgst,
+      sgst: booking.sgst,
+      igst: booking.igst,
+      billTotal: booking.billTotal,
+      grandTotal: booking.grandTotal,
+      startStation: {
+        stationName: booking.startStation?.stationName,
+        gst: booking.startStation?.gst  // Include GST from startStation
+      },
+      endStation: {
+        stationName: booking.endStation?.stationName
+      }
+    };
+
+    res.json(simplifiedResponse);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: err.message });

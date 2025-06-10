@@ -90,6 +90,7 @@ const initialState = {
     state: '',
     city: '',
     pincode: '',
+    gst:'',
   },
   status: 'idle',
   error: null,

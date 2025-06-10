@@ -14,10 +14,11 @@ import {
 import PrintIcon from '@mui/icons-material/Print';
 import SendIcon from '@mui/icons-material/Send';
 import {viewBookingById,clearViewedBooking} from "../features/booking/bookingSlice";
+
 const InvoicePDF = forwardRef(({ invoice,bookingId, onShare }, ref) => {
     const dispatch = useDispatch()
  const booking = useSelector((state) => state.bookings.viewedBooking)
- console.log("booking",booking);
+ 
  useEffect(() => {
      if (bookingId) {
         console.log("Fetching booking:", bookingId); 
@@ -173,7 +174,7 @@ const InvoicePDF = forwardRef(({ invoice,bookingId, onShare }, ref) => {
                 <Box className="col-50" sx={{ width: { xs: '100%', sm: '48%' } }}>
                     <Typography variant="subtitle1" fontWeight="bold">From:</Typography>
                     <Typography>Bharat Parcel Service</Typography>
-                    <Typography>GST Number : 00000000000</Typography>
+                    <Typography>GST Number : {booking.startStation.gst}</Typography>
                     <Typography>Business Address</Typography>
                     <Typography>City, Country - 00000</Typography>
                     <Typography><strong>Phone:</strong> 📞 (000) 123-4567</Typography>
