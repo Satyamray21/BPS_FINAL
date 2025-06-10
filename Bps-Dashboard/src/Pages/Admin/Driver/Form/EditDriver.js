@@ -83,13 +83,13 @@ const EditDriver = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:8000/api/v2/driver/update/${driverId}`,
+        `https://api.bharatparcel.org//api/v2/driver/update/${driverId}`,
         formData,
         { headers: { 'Content-Type': 'multipart/form-data' } }
       );
 
       const updatedImagePath = response.data.message[fieldName];
-      const fullImageUrl = `http://localhost:8000/${updatedImagePath.replace(/\\/g, '/').replace(/^\/+/, '')}?ts=${Date.now()}`;
+      const fullImageUrl = `https://api.bharatparcel.org//${updatedImagePath.replace(/\\/g, '/').replace(/^\/+/, '')}?ts=${Date.now()}`;
 
       setForm(prev => ({
         ...prev,

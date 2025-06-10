@@ -10,7 +10,9 @@ import {
     FormControl,
     InputLabel,
     Select,
-    FormHelperText
+    FormHelperText,
+    IconButton,
+    InputAdornment
 } from "@mui/material";
 import * as Yup from "yup";
 import { useDispatch, useSelector } from 'react-redux';
@@ -18,6 +20,7 @@ import { fetchStates, fetchCities, clearCities } from '../../../../features/Loca
 import { createUsers } from '../../../../features/user/userSlice';
 import { useNavigate } from 'react-router-dom';
 import { fetchStations } from '../../../../features/stations/stationSlice';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 const validationSchema = Yup.object({
     firstName: Yup.string().required("Required"),
@@ -43,6 +46,9 @@ const UserForm = () => {
     const navigate = useNavigate();
     const { states, cities } = useSelector((state) => state.location);
     const { list: stations } = useSelector((state) => state.stations);
+    const [showPassword, setShowPassword] = useState(false);
+
+    const handleClickShowPassword = () => setShowPassword((prev) => !prev);
 
     const formik = useFormik({
         initialValues: {
@@ -166,11 +172,23 @@ const UserForm = () => {
                             fullWidth
                             label="Password"
                             name="password"
-                            type="password"
+                            type={showPassword ? 'text' : 'password'}
                             value={formik.values.password}
                             onChange={formik.handleChange}
                             error={formik.touched.password && Boolean(formik.errors.password)}
                             helperText={formik.touched.password && formik.errors.password}
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            onClick={handleClickShowPassword}
+                                            edge="end"
+                                        >
+                                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                )
+                            }}
                         />
                     </Grid>
 

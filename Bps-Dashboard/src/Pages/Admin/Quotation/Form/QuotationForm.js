@@ -127,7 +127,7 @@ const QuotationForm = () => {
             <Form>
               <EffectSyncCities values={values} dispatch={dispatch} setSenderCities={setSenderCities}
                 setReceiverCities={setReceiverCities} />
-                <EffectSyncTotal values={values} setFieldValue={setFieldValue}/>
+              <EffectSyncTotal values={values} setFieldValue={setFieldValue} />
               <Box sx={{ p: 3, maxWidth: 1200, mx: "auto" }}>
                 <Grid size={{ xs: 12 }}>
                   <Typography variant="h6" fontWeight="bold">
@@ -456,32 +456,32 @@ const QuotationForm = () => {
                     />
                   </Grid>
                   <Grid size={{ xs: 12, md: 3 }}>
-  <Grid container spacing={2}>
-    <Grid item xs={6}>
-      <TextField
-        name="amount"
-        label="Amount"
-        value={values.amount}
-        InputProps={{ readOnly: true }}
-        fullWidth
-        size="small"
-      />
-    </Grid>
-    <Grid item xs={6}>
-      <TextField
-        name="grandTotal"
-        label="Grand Total"
-        value={values.grandTotal}
-        InputProps={{ readOnly: true }}
-        fullWidth
-        size="small"
-      />
-    </Grid>
-  </Grid>
-</Grid>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <TextField
+                          name="amount"
+                          label="Amount"
+                          value={values.amount}
+                          InputProps={{ readOnly: true }}
+                          fullWidth
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          name="grandTotal"
+                          label="Grand Total"
+                          value={values.grandTotal}
+                          InputProps={{ readOnly: true }}
+                          fullWidth
+                          size="small"
+                        />
+                      </Grid>
+                    </Grid>
+                  </Grid>
 
-                    
-                    
+
+
 
                   <Grid size={{ xs: 12 }}>
                     <Button

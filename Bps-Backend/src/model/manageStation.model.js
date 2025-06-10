@@ -29,6 +29,10 @@ const manageStationSchema = new mongoose.Schema({
         type:String,
         required:true
     },
+    gst:{
+        type:String,
+        required:true
+    },
     stationId: {
         type: String,
         unique: true

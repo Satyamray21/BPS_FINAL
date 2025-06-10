@@ -166,25 +166,49 @@ const BookingForm = () => {
                   </TextField>
                 </Grid>
 
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <DatePicker
-                    label="Booking Date"
-                    value={values.bookingDate}
-                    onChange={(val) => setFieldValue("bookingDate", val)}
-                    renderInput={(params) => (
-                      <TextField fullWidth {...params} name="bookingDate" />
-                    )}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <DatePicker
-                    label="Proposed Delivery Date"
-                    value={values.deliveryDate}
-                    onChange={(val) => setFieldValue("deliveryDate", val)}
-                    renderInput={(params) => (
-                      <TextField fullWidth {...params} name="deliveryDate" />
-                    )}
-                  />
+                <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <DatePicker
+                      label="Booking Date"
+                      value={values.bookingDate}
+                      onChange={(val) => setFieldValue("bookingDate", val)}
+                      minDate={new Date()}
+                      renderInput={(params) => (
+                        <TextField fullWidth {...params} name="bookingDate" />
+                      )}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          name: "bookingDate",
+                          error: false,
+                          InputProps: {
+                            sx: { width: 490 },
+                          },
+                        },
+                      }}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <DatePicker
+                      label="Proposed Delivery Date"
+                      value={values.deliveryDate}
+                      onChange={(val) => setFieldValue("deliveryDate", val)}
+                      minDate={values.bookingDate || new Date()}
+                      renderInput={(params) => (
+                        <TextField fullWidth {...params} name="deliveryDate" />
+                      )}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          name: "deliveryDate",
+                          error: false,
+                          InputProps: {
+                            sx: { width: 490 },
+                          },
+                        },
+                      }}
+                    />
+                  </Grid>
                 </Grid>
 
                 <Grid size={{ xs: 12, sm: 9 }}>

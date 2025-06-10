@@ -8,6 +8,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 import { useDispatch, useSelector } from 'react-redux';
 import { previewInvoices, generateInvoices } from '../../../features/customerLedger/customerLedgerSlice';
+
 const LedgerCard = () => {
     const dispatch = useDispatch();
     const [emailId, setEmail] = useState('');
@@ -17,17 +18,18 @@ const LedgerCard = () => {
     const [comment, setComment] = useState('');
     const [selectedRows, setSelectedRows] = useState([]);
     const { preview: rows } = useSelector((state) => state.ledger)
+    const totalAmount = rows.reduce((sum, row) => sum + (row.amount || 0), 0);
+    const totalRemaining = rows.reduce((sum, row) => sum + (row.remainingAmount || 0), 0);
     const orderOptions = [
         { value: 'Booking', label: 'Booking Order' },
         { value: 'Quotation', label: 'Quotation Order' },
     ];
 
-const handleSubmit = (bookingIds) => {
-    console.log("Generating for IDs:", bookingIds);
-    
-        dispatch(generateInvoices({bookingIds}));
-    
-};
+    const handleSubmit = (bookingIds) => {
+        console.log("Generating for IDs:", bookingIds);
+        dispatch(generateInvoices({ bookingIds }));
+
+    };
 
 
     return (
@@ -136,7 +138,7 @@ const handleSubmit = (bookingIds) => {
                                     <TableCell>{row.date}</TableCell>
                                     <TableCell>{row.bookingId}</TableCell>
                                     <TableCell>{row.pickupLocation}</TableCell>
-                                    <TableCell>{row.dropLocation || row.dropLocation?.stationName || "N/A"}</TableCell>
+                                    <TableCell>{row.dropLocation?.stationName || row.dropLocation}</TableCell>
                                     <TableCell>
                                         <Button variant="outlined" size="small">View</Button>
                                     </TableCell>
@@ -151,12 +153,12 @@ const handleSubmit = (bookingIds) => {
             <Grid container spacing={2} mt={2}>
                 <Grid item xs={6}>
                     <Typography variant="subtitle1">
-                        <strong>Total Amount:</strong> ₹10,000
+                        <strong>Total Amount:</strong> ₹{totalAmount.toLocaleString()}
                     </Typography>
                 </Grid>
                 <Grid item xs={6}>
                     <Typography variant="subtitle1">
-                        <strong>Remaining Amount:</strong> ₹3,000
+                        <strong>Remaining Amount:</strong> ₹{totalRemaining.toLocaleString()}
                     </Typography>
                 </Grid>
             </Grid>

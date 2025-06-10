@@ -37,9 +37,10 @@ import { useSelector, useDispatch } from "react-redux";
 import {
   fetchBookingRequest,
   fetchActiveBooking,
-  fetchCancelledBooking, deleteBooking,sendWhatsAppMsg,sendBookingEmail,revenueList
+  fetchCancelledBooking, deleteBooking, sendWhatsAppMsg, sendBookingEmail, revenueList
 } from "../../../features/quotation/quotationSlice";
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import { Snackbar, Alert } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 
 function descendingComparator(a, b, orderBy) {
@@ -90,15 +91,16 @@ const QuotationCard = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedList, setSelectedList] = useState("request");
+  const [openSnackbar, setOpenSnackbar] = useState(false);
 
-  const { list: bookingList = [], requestCount, activeDeliveriesCount, cancelledDeliveriesCount,totalRevenue } =
+  const { list: bookingList = [], requestCount, activeDeliveriesCount, cancelledDeliveriesCount, totalRevenue } =
     useSelector((state) => state.quotations);
-   useEffect(()=>{
+  useEffect(() => {
     dispatch(fetchBookingRequest());
     dispatch(fetchCancelledBooking());
     dispatch(fetchActiveBooking());
     dispatch(revenueList());
-   },[dispatch])
+  }, [dispatch])
   useEffect(() => {
     switch (selectedList) {
       case "request":
@@ -110,7 +112,7 @@ const QuotationCard = () => {
       case "cancelled":
         dispatch(fetchCancelledBooking());
         break;
-        case "reveune":
+      case "reveune":
         dispatch(revenueList());
         break;
       default:
@@ -146,9 +148,10 @@ const QuotationCard = () => {
     setPage(0);
   };
 
-  const handleSend = (bookingId) =>{
+  const handleSend = (bookingId) => {
     dispatch(sendWhatsAppMsg(bookingId))
     dispatch(sendBookingEmail(bookingId))
+    setOpenSnackbar(true);
   }
   const filteredRows = Array.isArray(bookingList)
     ? bookingList.filter((row) => {
@@ -195,7 +198,7 @@ const QuotationCard = () => {
       value: totalRevenue,
       subtitle: "Total Revenue",
       duration: "100% (30 Days)",
-      type:"reveune",
+      type: "reveune",
       icon: <AccountBalanceWalletIcon fontSize="large" />,
     },
   ];
@@ -359,9 +362,19 @@ const QuotationCard = () => {
                           <DeleteIcon fontSize="small" />
                         </IconButton>
                         <IconButton size="small" color="primary">
-                          <SendIcon fontSize="small"  onClick = {()=>{handleSend(row['Booking ID'])}}/>
+                          <SendIcon fontSize="small" onClick={() => { handleSend(row['Booking ID']) }} />
                         </IconButton>
                       </Box>
+                      <Snackbar
+                        open={openSnackbar}
+                        autoHideDuration={3000}
+                        onClose={() => setOpenSnackbar(false)}
+                        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+                      >
+                        <Alert onClose={() => setOpenSnackbar(false)} severity="success" variant="filled" sx={{ width: '100%' }}>
+                          Share link sent via WhatsApp and Email!
+                        </Alert>
+                      </Snackbar>
                     </TableCell>
                   </TableRow>
                 ))}

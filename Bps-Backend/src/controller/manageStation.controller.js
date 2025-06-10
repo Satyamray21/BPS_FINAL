@@ -6,7 +6,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 // Create Station
 const createManageStation = asyncHandler(async (req, res) => {
   
-  const { stationName, contact, emailId, address, state, city, pincode } = req.body;
+  const { stationName, contact, emailId, address, state, city, pincode,gst } = req.body;
 
   if ([stationName, contact, emailId, address, state, city, pincode].some(field => typeof field === 'string' && field.trim() === "")) {
     throw new ApiError(400, "All fields are compulsory");
@@ -27,7 +27,8 @@ const createManageStation = asyncHandler(async (req, res) => {
     address,
     state,
     city,
-    pincode
+    pincode,
+    gst
   });
 
   const createdStation = await manageStation.findById(station._id);

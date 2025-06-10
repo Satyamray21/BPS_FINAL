@@ -170,6 +170,26 @@ export const updateStatus = createAsyncThunk(
         }
     }
 )
+
+export const changePassword = createAsyncThunk(
+    'auth/changePassword',
+    async ({ oldpassword, newPassword }, thunkApi) => {
+        try {
+            const response = await axios.post(`${BASE_URL}/changePassword`, {
+                oldpassword,
+                newPassword,
+            }, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            return response.data.message;
+        } catch (err) {
+            return thunkApi.rejectWithValue(err.response?.data?.message || 'Failed to change password');
+        }
+    }
+);
+
 const initialState = {
     list: [],
     blackCount: 0,
@@ -259,7 +279,7 @@ const userSlice = createSlice({
                     middleName: payload.middleName || '',
                     lastName: payload.lastName || '',
                     contactNumber: payload.contactNumber || '',
-                    email: payload.emailId || '',
+                    emailId: payload.emailId || '',
                     address: payload.address || '',
                     state: payload.state || '',
                     city: payload.city || '',
@@ -305,7 +325,7 @@ const userSlice = createSlice({
                     middleName: payload.middleName || '',
                     lastName: payload.lastName || '',
                     contactNumber: payload.contactNumber || '',
-                    email: payload.emailId || '',
+                    emailId: payload.emailId || '',
                     address: payload.address || '',
                     state: payload.state || '',
                     city: payload.city || '',
@@ -372,6 +392,18 @@ const userSlice = createSlice({
             .addCase(updateStatus.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload
+            })
+            .addCase(changePassword.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(changePassword.fulfilled, (state, action) => {
+                state.loading = false;
+                state.status = 'Password changed successfully';
+            })
+            .addCase(changePassword.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
             })
             ;
     }

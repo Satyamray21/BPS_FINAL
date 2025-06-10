@@ -1,4 +1,4 @@
-import React,{useEffect} from "react";
+import React, { useEffect } from "react";
 import {
   Box,
   Grid,
@@ -8,39 +8,37 @@ import {
   MenuItem,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import { useNavigate,useParams } from 'react-router-dom';
-import {useDispatch,useSelector} from 'react-redux'
-import {clearViewedBooking, viewBookingById} from '../../../../features/booking/bookingSlice';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux'
+import { clearViewedBooking, viewBookingById } from '../../../../features/booking/bookingSlice';
 
 
 const ViewBooking = () => {
-    const navigate = useNavigate();
-    const {bookingId} = useParams();
-    const dispatch = useDispatch();
-    const booking= useSelector((state)=>state.bookings.viewedBooking)
+  const navigate = useNavigate();
+  const { bookingId } = useParams();
+  const dispatch = useDispatch();
+  const booking = useSelector((state) => state.bookings.viewedBooking)
 
-    useEffect(()=>{
-        if(bookingId)
-        {
-            dispatch(viewBookingById(bookingId));
-        }
-        return ()=>{
-            dispatch(clearViewedBooking());
-        }
-    },[bookingId])
-
-    if(!booking || Object.keys(booking).length === 0)
-    {
-       return (
-                   <Box sx={{ p: 4, textAlign: 'center' }}>
-                       <Typography variant="h6">Loading Booking details...</Typography>
-                   </Box>
-               );
+  useEffect(() => {
+    if (bookingId) {
+      dispatch(viewBookingById(bookingId));
     }
+    return () => {
+      dispatch(clearViewedBooking());
+    }
+  }, [bookingId])
+
+  if (!booking || Object.keys(booking).length === 0) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <Typography variant="h6">Loading Booking details...</Typography>
+      </Box>
+    );
+  }
   return (
     <Box sx={{ p: 3, maxWidth: 1200, mx: "auto" }}>
       <Grid container spacing={2}>
-        <Grid size ={{xs:12, sm:6}}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             select
             fullWidth
@@ -53,7 +51,7 @@ const ViewBooking = () => {
             </MenuItem>
           </TextField>
         </Grid>
-        <Grid size ={{xs:12, sm:6}}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             select
             fullWidth
@@ -67,7 +65,7 @@ const ViewBooking = () => {
           </TextField>
         </Grid>
 
-        <Grid size ={{xs:12, sm:6}}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             fullWidth
             label="Booking Date"
@@ -75,7 +73,7 @@ const ViewBooking = () => {
             InputProps={{ readOnly: true }}
           />
         </Grid>
-        <Grid size ={{xs:12, sm:6}}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             fullWidth
             label="Proposed Delivery Date"
@@ -84,9 +82,9 @@ const ViewBooking = () => {
           />
         </Grid>
 
-        
-       
-        <Grid size ={{xs:12, sm:4}}>
+
+
+        <Grid size={{ xs: 12, sm: 4 }}>
           <TextField
             fullWidth
             label="First Name"
@@ -94,7 +92,7 @@ const ViewBooking = () => {
             InputProps={{ readOnly: true }}
           />
         </Grid>
-        <Grid size ={{xs:12, sm:4}}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <TextField
             fullWidth
             label="Middle Name"
@@ -102,7 +100,7 @@ const ViewBooking = () => {
             InputProps={{ readOnly: true }}
           />
         </Grid>
-        <Grid size ={{xs:12, sm:4}}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <TextField
             fullWidth
             label="Last Name"
@@ -111,7 +109,7 @@ const ViewBooking = () => {
           />
         </Grid>
 
-        <Grid size ={{xs:12, sm:6}}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             fullWidth
             label="Contact Number"
@@ -119,7 +117,7 @@ const ViewBooking = () => {
             InputProps={{ readOnly: true }}
           />
         </Grid>
-        <Grid size ={{xs:12, sm:6}}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             fullWidth
             label="Email"
@@ -128,10 +126,10 @@ const ViewBooking = () => {
           />
         </Grid>
 
-        <Grid size ={{xs:12}}>
+        <Grid size={{ xs: 12 }}>
           <Typography variant="h6">From (Address)</Typography>
         </Grid>
-        <Grid size ={{xs:12, sm:6}}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             fullWidth
             label="Name"
@@ -139,7 +137,7 @@ const ViewBooking = () => {
             InputProps={{ readOnly: true }}
           />
         </Grid>
-        <Grid size ={{xs:12, sm:6}}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             fullWidth
             label="GST Number"
@@ -147,7 +145,7 @@ const ViewBooking = () => {
             InputProps={{ readOnly: true }}
           />
         </Grid>
-        <Grid size ={{xs:12, sm:6}}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             fullWidth
             label="Locality / Street"
@@ -155,7 +153,7 @@ const ViewBooking = () => {
             InputProps={{ readOnly: true }}
           />
         </Grid>
-        <Grid size ={{xs:12, sm:6}}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             select
             fullWidth
@@ -168,7 +166,7 @@ const ViewBooking = () => {
             </MenuItem>
           </TextField>
         </Grid>
-        <Grid size ={{xs:12, sm:6}}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             select
             fullWidth
@@ -181,7 +179,7 @@ const ViewBooking = () => {
             </MenuItem>
           </TextField>
         </Grid>
-        <Grid size ={{xs:12, sm:6}}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             fullWidth
             label="Pin Code"
@@ -190,10 +188,10 @@ const ViewBooking = () => {
           />
         </Grid>
 
-        <Grid size ={{xs:12}}>
+        <Grid size={{ xs: 12 }}>
           <Typography variant="h6">To (Address)</Typography>
         </Grid>
-        <Grid size ={{xs:12, sm:6}}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             fullWidth
             label="Name"
@@ -201,7 +199,7 @@ const ViewBooking = () => {
             InputProps={{ readOnly: true }}
           />
         </Grid>
-        <Grid size ={{xs:12, sm:6}}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             fullWidth
             label="GST Number"
@@ -209,7 +207,7 @@ const ViewBooking = () => {
             InputProps={{ readOnly: true }}
           />
         </Grid>
-        <Grid size ={{xs:12, sm:6}}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             fullWidth
             label="Locality / Street"
@@ -217,7 +215,7 @@ const ViewBooking = () => {
             InputProps={{ readOnly: true }}
           />
         </Grid>
-        <Grid size ={{xs:12, sm:6}}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             select
             fullWidth
@@ -230,7 +228,7 @@ const ViewBooking = () => {
             </MenuItem>
           </TextField>
         </Grid>
-        <Grid size ={{xs:12, sm:6}}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             select
             fullWidth
@@ -243,7 +241,7 @@ const ViewBooking = () => {
             </MenuItem>
           </TextField>
         </Grid>
-        <Grid size ={{xs:12, sm:6}}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             fullWidth
             label="Pin Code"
@@ -252,15 +250,15 @@ const ViewBooking = () => {
           />
         </Grid>
 
-        <Grid size ={{xs:12}}>
+        <Grid size={{ xs: 12 }}>
           <Typography variant="h6">Product Details</Typography>
         </Grid>
         {booking.items.map((item, index) => (
           <Grid container spacing={2} key={index} alignItems="center" sx={{ mb: 2 }}>
-            <Grid size ={{xs:0.5}}>
+            <Grid size={{ xs: 0.5 }}>
               <Typography>{index + 1}.</Typography>
             </Grid>
-            <Grid size ={{xs:3, sm:3, md:1.4}}>
+            <Grid size={{ xs: 3, sm: 3, md: 1.4 }}>
               <TextField
                 fullWidth
                 size="small"
@@ -269,7 +267,7 @@ const ViewBooking = () => {
                 InputProps={{ readOnly: true }}
               />
             </Grid>
-            <Grid size ={{xs:3, sm:3, md:1.4}}>
+            <Grid size={{ xs: 3, sm: 3, md: 1.4 }}>
               <TextField
                 fullWidth
                 size="small"
@@ -278,7 +276,7 @@ const ViewBooking = () => {
                 InputProps={{ readOnly: true }}
               />
             </Grid>
-            <Grid size ={{xs:3, sm:3, md:1.4}}>
+            <Grid size={{ xs: 3, sm: 3, md: 1.4 }}>
               <TextField
                 fullWidth
                 size="small"
@@ -287,7 +285,7 @@ const ViewBooking = () => {
                 InputProps={{ readOnly: true }}
               />
             </Grid>
-            <Grid size ={{xs:3, sm:3, md:1.4}}>
+            <Grid size={{ xs: 3, sm: 3, md: 1.4 }}>
               <TextField
                 fullWidth
                 size="small"
@@ -296,7 +294,7 @@ const ViewBooking = () => {
                 InputProps={{ readOnly: true }}
               />
             </Grid>
-            <Grid size ={{xs:3, sm:3, md:1.4}}>
+            <Grid size={{ xs: 3, sm: 3, md: 1.4 }}>
               <TextField
                 fullWidth
                 size="small"
@@ -305,7 +303,7 @@ const ViewBooking = () => {
                 InputProps={{ readOnly: true }}
               />
             </Grid>
-            <Grid size ={{xs:3, sm:3, md:1.4}}>
+            <Grid size={{ xs: 3, sm: 3, md: 1.4 }}>
               <TextField
                 fullWidth
                 size="small"
@@ -314,7 +312,7 @@ const ViewBooking = () => {
                 InputProps={{ readOnly: true }}
               />
             </Grid>
-            <Grid size ={{xs:3, sm:3, md:1.5}}>
+            <Grid size={{ xs: 3, sm: 3, md: 1.5 }}>
               <TextField
                 select
                 fullWidth
@@ -326,13 +324,13 @@ const ViewBooking = () => {
                 <MenuItem value={item.toPay}>{item.toPay}</MenuItem>
               </TextField>
             </Grid>
-           
+
           </Grid>
         ))}
 
-      
 
-        <Grid size ={{xs:12, md:9}}>
+
+        <Grid size={{ xs: 12, md: 9 }}>
           <TextField
             label="Additional Comments"
             multiline
@@ -343,9 +341,9 @@ const ViewBooking = () => {
             variant="outlined"
           />
         </Grid>
-        <Grid size ={{xs:12, md:3}}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <Grid container spacing={2}>
-            <Grid size ={{xs:6}}>
+            <Grid size={{ xs: 6 }}>
               <TextField
                 label="FREIGHT"
                 value={booking.freight}
@@ -354,7 +352,7 @@ const ViewBooking = () => {
                 size="small"
               />
             </Grid>
-            <Grid size ={{xs:6}}>
+            <Grid size={{ xs: 6 }}>
               <TextField
                 label="INS/VPP"
                 value={booking.ins_vpp}
@@ -363,7 +361,7 @@ const ViewBooking = () => {
                 size="small"
               />
             </Grid>
-            <Grid size ={{xs:6}}>
+            <Grid size={{ xs: 6 }}>
               <TextField
                 label="Bill Total"
                 value={booking.billTotal}
@@ -372,7 +370,7 @@ const ViewBooking = () => {
                 size="small"
               />
             </Grid>
-            <Grid size ={{xs:6}}>
+            <Grid size={{ xs: 6 }}>
               <TextField
                 label="CGST%"
                 value={booking.cgst}
@@ -381,7 +379,7 @@ const ViewBooking = () => {
                 size="small"
               />
             </Grid>
-            <Grid size ={{xs:6}}>
+            <Grid size={{ xs: 6 }}>
               <TextField
                 label="SGST%"
                 value={booking.sgst}
@@ -390,7 +388,7 @@ const ViewBooking = () => {
                 size="small"
               />
             </Grid>
-            <Grid size ={{xs:6}}>
+            <Grid size={{ xs: 6 }}>
               <TextField
                 label="IGST%"
                 value={booking.igst}
@@ -399,7 +397,7 @@ const ViewBooking = () => {
                 size="small"
               />
             </Grid>
-            <Grid size ={{xs:6}}>
+            <Grid size={{ xs: 6 }}>
               <TextField
                 label="Grand Total"
                 value={booking.grandTotal}
@@ -411,7 +409,7 @@ const ViewBooking = () => {
           </Grid>
         </Grid>
 
-      
+
       </Grid>
     </Box>
   );

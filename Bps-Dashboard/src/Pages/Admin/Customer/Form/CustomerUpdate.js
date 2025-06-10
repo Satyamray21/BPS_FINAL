@@ -113,14 +113,14 @@ const CustomerUpdate = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:8000/api/v2/customers/update/${customerId}`,
+        `https://api.bharatparcel.org/api/v2/customers/update/${customerId}`,
         formData,
         { headers: { 'Content-Type': 'multipart/form-data' } }
       );
 
       // Get the updated image path from response
       const updatedImagePath = response.data.message[fieldName];
-      const fullImageUrl = `http://localhost:8000/${updatedImagePath.replace(/\\/g, '/').replace(/^\/+/g, '')}?ts=${Date.now()}`;
+      const fullImageUrl = `https://api.bharatparcel.org/${updatedImagePath.replace(/\\/g, '/').replace(/^\/+/g, '')}?ts=${Date.now()}`;
 
       // Update state with the new image URL
       setForm(prev => ({

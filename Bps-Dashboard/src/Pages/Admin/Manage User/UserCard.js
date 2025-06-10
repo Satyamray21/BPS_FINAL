@@ -149,7 +149,6 @@ const UserCard = () => {
   const handleSearch = (e) => { setSearchTerm(e.target.value); setPage(0); };
   const handleDelete = (adminId) => {
     if (window.confirm("Are you sure you want to delete this Supervisor ?")) {
-
       dispatch(deleteUser(adminId));
     }
   }
@@ -168,8 +167,8 @@ const UserCard = () => {
   };
   const filteredRows = userList.filter(
     row =>
-      row.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      row.contact.includes(searchTerm)
+      (row.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (row.contact || '').includes(searchTerm)
   );
 
   const emptyRows = Math.max(0, (1 + page) * rowsPerPage - filteredRows.length);
