@@ -79,7 +79,7 @@ export const viewBookingById = createAsyncThunk(
   '/booking/viewBookingById', async (bookingId, thunkApi) => {
     try {
       const res = await axios.get(`${BASE_URL}/search/${bookingId}`)
-      return res?.data?.data;
+      return res.data.data;
     }
     catch (err) {
       return thunkApi.rejectWithValue(err.response?.data?.message || 'f');

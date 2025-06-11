@@ -37,12 +37,13 @@ import { useSelector, useDispatch } from "react-redux";
 import {
   fetchBookingRequest,
   fetchActiveBooking,
-  fetchCancelledBooking, deleteBooking, sendWhatsAppMsg, sendBookingEmail, revenueList
+  fetchCancelledBooking, deleteBooking, sendWhatsAppMsg, sendBookingEmail, revenueList,viewBookingById,clearViewedBooking
 } from "../../../features/quotation/quotationSlice";
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Snackbar, Alert } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
-
+import ReceiptIcon from '@mui/icons-material/Receipt';
+import QSlipModal from "../../../Components/QSlipModal";
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) return -1;
   if (b[orderBy] > a[orderBy]) return 1;
@@ -92,7 +93,7 @@ const QuotationCard = () => {
 
   const cardColor = "#0155a5";
   const cardLightColor = "#e6f0fa";
-
+  const [localModalOpen, setLocalModalOpen] = useState(false);
   const [activeCard, setActiveCard] = useState("request");
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("senderName");
@@ -104,6 +105,8 @@ const QuotationCard = () => {
 
   const { list: bookingList = [], revenueList: revenueData = [],requestCount, activeDeliveriesCount, cancelledDeliveriesCount, totalRevenue } =
     useSelector((state) => state.quotations);
+     
+      const booking = useSelector((state) => state.quotations.viewedBooking);
   useEffect(() => {
     dispatch(fetchBookingRequest());
     dispatch(fetchCancelledBooking());
@@ -164,6 +167,21 @@ const QuotationCard = () => {
     dispatch(sendBookingEmail(bookingId))
     setOpenSnackbar(true);
   }
+   const handleSlipClick = (bookingId) => {
+    dispatch(viewBookingById(bookingId))
+      .unwrap()
+      .then(() => {
+        setLocalModalOpen(true);
+      })
+      .catch((error) => {
+        console.error("Error loading booking:", error);
+      });
+  };
+
+  const handleCloseSlip = () => {
+    setLocalModalOpen(false);
+    dispatch(clearViewedBooking());
+  };
   const dataSource = selectedList === "revenue" ? revenueData : bookingList;
 
 const filteredRows = Array.isArray(dataSource)
@@ -402,17 +420,17 @@ const filteredRows = Array.isArray(dataSource)
                         <IconButton size="small" color="primary">
                           <SendIcon fontSize="small" onClick={() => { handleSend(row['Booking ID']) }} />
                         </IconButton>
+                        <IconButton
+                                                      size="small"
+                                                      color="secondary"
+                                                      onClick={() => handleSlipClick(row['Booking ID'])}
+                                                      title="Slip"
+                                                    >
+                                                      <ReceiptIcon fontSize="small" />
+                                                    </IconButton>
                       </Box>
-                      <Snackbar
-                        open={openSnackbar}
-                        autoHideDuration={3000}
-                        onClose={() => setOpenSnackbar(false)}
-                        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-                      >
-                        <Alert onClose={() => setOpenSnackbar(false)} severity="success" variant="filled" sx={{ width: '100%' }}>
-                          Share link sent via WhatsApp and Email!
-                        </Alert>
-                      </Snackbar>
+                       
+                     
                     </TableCell>
                     </>
                                         )}
@@ -435,6 +453,21 @@ const filteredRows = Array.isArray(dataSource)
             onRowsPerPageChange={handleChangeRowsPerPage}
           />
         </TableContainer>
+        <QSlipModal
+                                               open={localModalOpen}
+                                                handleClose={handleCloseSlip}
+                                                bookingData={booking}
+                                                />
+                      <Snackbar
+                        open={openSnackbar}
+                        autoHideDuration={3000}
+                        onClose={() => setOpenSnackbar(false)}
+                        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+                      >
+                        <Alert onClose={() => setOpenSnackbar(false)} severity="success" variant="filled" sx={{ width: '100%' }}>
+                          Share link sent via WhatsApp and Email!
+                        </Alert>
+                      </Snackbar>
       </Box>
     </Box>
   );
