@@ -39,10 +39,10 @@ import {
 } from "@mui/icons-material";
 import AddIcon from "@mui/icons-material/Add";
 import { useDispatch, useSelector } from 'react-redux';
-import { bookingRequestCount, activeBookingCount, cancelledBookingCount, fetchBookingsByType, cancelBooking, deleteBooking, revenueList ,sendWhatsAppMsg,sendEmail} from '../../../features/booking/bookingSlice'
+import { bookingRequestCount, activeBookingCount, cancelledBookingCount, fetchBookingsByType, cancelBooking, deleteBooking, revenueList ,sendWhatsAppMsg,sendEmail,viewBookingById, clearViewedBooking} from '../../../features/booking/bookingSlice'
 import SendIcon from '@mui/icons-material/Send';
-
-
+import ReceiptIcon from '@mui/icons-material/Receipt';
+import SlipModal from "../../../Components/SlipModal";
 const createData = (id, orderby, date, namep, pickup, named, drop, contact) => ({
   id,
   orderby,
@@ -115,7 +115,8 @@ const BookingCard = () => {
   const [bookingToDelete, setBookingToDelete] = useState(null);
   const dispatch = useDispatch();
   const { list: bookingList, revenueList: revenueData = [], requestCount, activeDeliveriesCount, cancelledDeliveriesCount, totalRevenue } = useSelector(state => state.bookings);
-
+  const openSlip = useSelector((state) => state.bookings.viewedBooking !== null);
+  const booking = useSelector((state) => state.bookings.viewedBooking);
   useEffect(() => {
     if (bookingList && Array.isArray(bookingList)) {
       setBookings(bookingList);
@@ -198,8 +199,8 @@ const BookingCard = () => {
     navigate(`/editbooking/${bookingId}`);
   };
 
-  const handleDeleteClick = (row) => {
-    setBookingToDelete(row);
+  const handleDeleteClick = (bookingId) => {
+    setBookingToDelete(bookingId);
     setDeleteDialogOpen(true);
   };
   const handleCancel = (bookingId) => {
@@ -207,8 +208,8 @@ const BookingCard = () => {
     window.location.reload();
   }
 
-  const handleDeleteConfirm = (bookingId) => {
-    dispatch(deleteBooking(bookingId))
+  const handleDeleteConfirm = () => {
+    dispatch(deleteBooking(bookingToDelete))
     setDeleteDialogOpen(false);
     setBookingToDelete(null);
   };
@@ -217,7 +218,13 @@ const BookingCard = () => {
     setDeleteDialogOpen(false);
     setBookingToDelete(null);
   };
+ const handleSlipClick = (bookingId) => {
+    dispatch(viewBookingById(bookingId));
+  };
 
+  const handleCloseSlip = () => {
+    dispatch(clearViewedBooking());
+  };
   const filteredRows = (
   isRevenueCardActive
     ? (Array.isArray(revenueData) 
@@ -509,7 +516,20 @@ const BookingCard = () => {
                             >
                               <SendIcon fontSize="small" />
                             </IconButton>
+                            <IconButton
+                              size="small"
+                              color="secondary"
+                              onClick={() => handleSlipClick(row.bookingId)}
+                              title="Slip"
+                            >
+                              <ReceiptIcon fontSize="small" />
+                            </IconButton>
                           </Box>
+                           <SlipModal
+                          open={openSlip}
+                          handleClose={handleCloseSlip}
+                          bookingData={booking}
+                        />
                         </TableCell>
                       </>
                     )}
@@ -538,7 +558,7 @@ const BookingCard = () => {
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
-          Are you sure you want to delete booking #{bookingToDelete?.id}?
+          Are you sure you want to delete booking {bookingToDelete}?
         </DialogContent>
         <DialogActions>
           <Button onClick={handleDeleteCancel}>Cancel</Button>

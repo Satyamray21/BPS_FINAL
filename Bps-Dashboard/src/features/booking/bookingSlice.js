@@ -38,7 +38,7 @@ export const createBooking = createAsyncThunk(
 export const deleteBooking = createAsyncThunk(
   '/booking/deleteBooking', async (bookingId, thunkApi) => {
     try {
-      const res = await axios.delete(`${BASE_URL}/delete/${bookingId}`)
+      const res = await axios.delete(`${BASE_URL}/${bookingId}`)
       return bookingId;
     }
     catch (error) {
