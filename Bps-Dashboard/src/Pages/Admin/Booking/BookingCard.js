@@ -109,11 +109,12 @@ const BookingCard = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedList, setSelectedList] = useState("request");
   const [bookings, setBookings] = useState([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [bookingToDelete, setBookingToDelete] = useState(null);
   const dispatch = useDispatch();
-  const { list: bookingList, requestCount, activeDeliveriesCount, cancelledDeliveriesCount, totalRevenue } = useSelector(state => state.bookings);
+  const { list: bookingList, revenueList: revenueData = [], requestCount, activeDeliveriesCount, cancelledDeliveriesCount, totalRevenue } = useSelector(state => state.bookings);
 
   useEffect(() => {
     if (bookingList && Array.isArray(bookingList)) {
@@ -126,7 +127,26 @@ const BookingCard = () => {
     dispatch(bookingRequestCount());
     dispatch(activeBookingCount());
     dispatch(cancelledBookingCount());
+    dispatch(revenueList());
   }, [dispatch])
+  useEffect(() => {
+      switch (selectedList) {
+        case "request":
+          dispatch(fetchBookingsByType('request'));
+          break;
+        case "active":
+          dispatch(fetchBookingsByType('active'));
+          break;
+        case "cancelled":
+          dispatch(fetchBookingsByType('cancelled'));
+          break;
+        case "revenue":
+          dispatch(revenueList());
+          break;
+        default:
+          break;
+      }
+    }, [selectedList, dispatch]);
   const handleAdd = () => {
     navigate("/booking/new");
   };
@@ -135,11 +155,15 @@ const BookingCard = () => {
 
   const displayHeadCells = isRevenueCardActive ? revenueHeadCells : headCells;
 
-  const handleCardClick = (type, route, cardId) => {
-    setActiveCard(cardId);
+  const handleCardClick = (type, cardId) => {
+  setActiveCard(cardId);
+  setSelectedList(type);
+  if (type === 'revenue') {
+    dispatch(revenueList());
+  } else {
     dispatch(fetchBookingsByType(type));
-    if (route) navigate(route);
-  };
+  }
+};
 
   const handleShare = (bookingId)=>{
     dispatch(sendWhatsAppMsg(bookingId));
@@ -194,16 +218,28 @@ const BookingCard = () => {
     setBookingToDelete(null);
   };
 
-  const filteredRows = Array.isArray(bookingList) ? bookingList.filter(
-    (row) =>
-      (row.orderby && row.orderby.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (row.namep && row.namep.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (row.named && row.named.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (row.pickup && row.pickup.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (row.drop && row.drop.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (row.contact && row.contact.includes(searchTerm))
-  ) : []
-    ;
+  const filteredRows = (
+  isRevenueCardActive
+    ? (Array.isArray(revenueData) 
+        ? revenueData.filter(row => 
+            (row.bookingId && row.bookingId.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (row.pickup && row.pickup.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (row.drop && row.drop.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (row.revenue && row.revenue.toString().includes(searchTerm))
+          )
+        : [])
+    : (Array.isArray(bookingList) 
+        ? bookingList.filter(row =>
+            (row.orderby && row.orderby.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (row.namep && row.namep.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (row.named && row.named.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (row.pickup && row.pickup.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (row.drop && row.drop.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (row.contact && row.contact.includes(searchTerm))
+          )
+        : [])
+);
+
   const cardData = [
     {
       id: 1,
@@ -238,7 +274,7 @@ const BookingCard = () => {
       duration: "100% (30 Days)",
       title: "Revenue",
       icon: <AccountBalanceWalletIcon fontSize="large" />,
-      type: "revnue",
+       type: "revenue"
     },
   ];
 
@@ -281,7 +317,7 @@ const BookingCard = () => {
             sx={{ minWidth: 220, flex: 1, display: "flex", borderRadius: 2 }}
           >
             <Card
-              onClick={() => handleCardClick(card.type, card.route, card.id)}
+              onClick={() => handleCardClick(card.type, card.id)}
               sx={{
                 flex: 1,
                 cursor: "pointer",
@@ -407,7 +443,7 @@ const BookingCard = () => {
                         <TableCell>{row.date}</TableCell>
                         <TableCell>{row.pickup}</TableCell>
                         <TableCell>{row.drop}</TableCell>
-                        <TableCell>{row.revenue ?? "-"}</TableCell>
+                        <TableCell>{row.revenue}</TableCell>
                         <TableCell>
                           <Box sx={{ display: "flex", gap: 1 }}>
                             <IconButton
