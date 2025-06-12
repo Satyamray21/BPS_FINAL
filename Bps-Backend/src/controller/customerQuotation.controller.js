@@ -265,7 +265,7 @@ export const searchQuotationByBookingId = asyncHandler(async (req, res, next) =>
   }
 
   const quotation = await Quotation.findOne({ bookingId })
-    .populate("startStation", "stationName")
+    .populate("startStation", "stationName gst address contact")
     .populate("customerId", "firstName lastName")
     .lean();
 

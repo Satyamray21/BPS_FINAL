@@ -56,7 +56,7 @@ app.use("/api/v2/bookings", bookingRouter);
 
 
 import deliveryRouter from "./src/router/delivery.router.js"
-app.use("/api/v2/delivery", deliveryRouter);
+app.use("/api/v2/delivery", verifyJwt, roleAccessFilter,deliveryRouter);
 
 
 import trackerRouter from "./src/router/tracker.router.js"
