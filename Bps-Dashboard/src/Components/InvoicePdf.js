@@ -175,15 +175,15 @@ const InvoicePDF = forwardRef(({ invoice,bookingId, onShare }, ref) => {
                     <Typography variant="subtitle1" fontWeight="bold">From:</Typography>
                     <Typography>Bharat Parcel Service</Typography>
                     <Typography>GST Number : {booking.startStation.gst}</Typography>
-                    <Typography>Business Address</Typography>
+                    <Typography>Business Address:{booking.startStation.address}</Typography>
                     <Typography>City, Country - 00000</Typography>
-                    <Typography><strong>Phone:</strong> 📞 (000) 123-4567</Typography>
+                    <Typography><strong>Phone:</strong> 📞 {booking.startStation.contact}</Typography>
                 </Box>
 
                 <Box className="col-50" sx={{ width: { xs: '100%', sm: '48%' } }}>
                     <Typography variant="subtitle1" fontWeight="bold">To:</Typography>
                     <Typography>{invoice.name}</Typography>
-                    <Typography>GST Number : 00000000000</Typography>
+                    <Typography>GST Number : {booking.senderGgt}</Typography>
                     <Typography>{booking?.toCity}, {booking?.toState} - {booking?.toPincode}</Typography>
                     <Typography>City, Country - 00000</Typography>
                     <Typography><strong>Phone:</strong> 📞{booking.mobile}</Typography>
