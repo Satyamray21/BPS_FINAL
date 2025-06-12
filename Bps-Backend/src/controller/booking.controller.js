@@ -661,6 +661,14 @@ export const cancelBooking = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+const getRevenueBookingFilter = (type, user) => {
+  const base = getBookingFilterByType(type, user);
+  if (base.$and) {
+    base.$and.unshift({ isDelivered: true });
+    return base;
+  }
+  return { ...base, isDelivered: true };
+};
 
 
 
@@ -668,8 +676,10 @@ export const getBookingRevenueList = async (req, res) => {
   try {
     const user = req.user;
     
+    const filter = getRevenueBookingFilter(req.query.type, req.user);
 
-    const bookings = await Booking.find(req.roleQueryFilter)
+
+    const bookings = await Booking.find(filter)
       .select('bookingId bookingDate startStation endStation grandTotal')
       .populate('startStation endStation', 'stationName')
       .lean();
