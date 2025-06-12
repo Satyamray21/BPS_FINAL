@@ -51,7 +51,13 @@ export const loginUser = asyncHandler(async (req, res) => {
     if (!user) {
       throw new ApiError(401, "Invalid email or password");
     }
+    if (user.isBlacklisted) {
+      throw new ApiError(403, "Your account has been blacklisted. Please contact support.");
+    }
 
+    if (user.isDeactivated) {
+      throw new ApiError(403, "Your account has been deactivated. Please contact support.");
+    }
     // Check if password is correct
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
     if (!isPasswordCorrect) {
