@@ -44,6 +44,22 @@ export const generateInvoices = createAsyncThunk(
     }
 );
 
+export const sendInvoices = createAsyncThunk(
+    'sendInvoices/invoices',
+    async (formData, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`${BASE_URL}/send-invoice`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || 'Failed to send invoice');
+    }
+  }
+);
+
 const ledgerSlice = createSlice({
     name: 'ledger',
     initialState: {
@@ -105,7 +121,22 @@ const ledgerSlice = createSlice({
             .addCase(generateInvoices.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
-            });
+            })
+            .addCase(sendInvoices.pending, (state) => {
+        state.loading = true;
+        state.success = false;
+        state.error = null;
+      })
+      .addCase(sendInvoices.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = true;
+        state.message = action.payload.message || 'Invoice sent successfully';
+      })
+      .addCase(sendInvoices.rejected, (state, action) => {
+        state.loading = false;
+        state.success = false;
+        state.error = action.payload || 'Something went wrong';
+      });
     },
 });
 
