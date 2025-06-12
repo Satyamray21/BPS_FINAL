@@ -70,8 +70,12 @@ export const viewBooking = async (req, res) => {
       lastName: booking.lastName,
       mobile: booking.mobile,
       email: booking.email,
-      bookingDate: booking.bookingDate,
-      deliveryDate: booking.deliveryDate,
+      bookingDate: booking.bookingDate
+  ? new Date(booking.bookingDate).toLocaleDateString('en-CA')
+  : null,
+deliveryDate: booking.deliveryDate
+  ? new Date(booking.deliveryDate).toLocaleDateString('en-CA')
+  : null,
       senderName: booking.senderName,
       senderGgt: booking.senderGgt,
       fromState: booking.fromState,
@@ -544,8 +548,9 @@ export const getBookingStatusList = async (req, res) => {
       orderBy:
     b.requestedByRole === 'public'
       ? 'Third Party'
-      : b.createdByRole || 'N/A',
-      date: b.bookingDate?.toISOString().slice(0, 10) || 'N/A',
+      : `${b.createdByRole} ${b.startStation?.stationName || ''}` || 'N/A',
+     date: b.bookingDate ? new Date(b.bookingDate).toLocaleDateString('en-CA') : 'N/A',
+
       fromName: b.senderName || 'N/A',
       pickup: b.startStation?.stationName || 'N/A',
       toName: b.receiverName || 'N/A',
