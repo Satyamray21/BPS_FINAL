@@ -57,7 +57,7 @@ export const viewBooking = async (req, res) => {
     const booking = await Booking.findOne({
       $or: [{ bookingId: id }]
     })
-      .populate('startStation', 'stationName gst')
+      .populate('startStation', 'stationName gst address contact')
       .populate('endStation', 'stationName')
       .lean();
 
@@ -92,7 +92,9 @@ export const viewBooking = async (req, res) => {
       grandTotal: booking.grandTotal,
       startStation: {
         stationName: booking.startStation?.stationName,
-        gst: booking.startStation?.gst  // Include GST from startStation
+        gst: booking.startStation?.gst ,
+        address:booking.startStation?.address,
+        contact:booking.startStation?.contact
       },
       endStation: {
         stationName: booking.endStation?.stationName
