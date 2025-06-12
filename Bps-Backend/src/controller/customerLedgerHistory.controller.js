@@ -54,7 +54,12 @@ export const previewInvoices = async (req, res) => {
       return {
         sno: index + 1,
         bookingId: order.bookingId,
-        date: order.bookingDate || order.quotationDate,
+        date: order.bookingDate
+  ? new Date(order.bookingDate).toLocaleDateString("en-CA")
+  : order.quotationDate
+  ? new Date(order.quotationDate).toLocaleDateString("en-CA")
+  : "",
+
         pickupLocation: order.startStation?.stationName || "",
         dropLocation: order.endStation?.stationName || "",
         amount: totalAmount,
@@ -184,7 +189,11 @@ export const getAllInvoices = async (req, res) => {
         sno: index + 1,
         invoiceId,
         bookingId: invoice.bookingId,
-        date: invoice.bookingDate || invoice.quotationDate,
+        date:invoice.bookingDate
+  ? new Date(invoice.bookingDate).toLocaleDateString("en-CA")
+  : invoice.quotationDate
+  ? new Date(invoice.quotationDate).toLocaleDateString("en-CA")
+  : "",
         name: customerName,
         order: invoice.bookingDate ? "Booking" : "Quotation",
         amount: totalAmount,
