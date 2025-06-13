@@ -199,9 +199,23 @@ export const rejectThridParty= createAsyncThunk(
     }
   }
 )
+export const fetchOverallBookingSummary = createAsyncThunk(
+  'booking/fetchOverallBookingSummary',
+  async ({ fromDate, endDate }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`${BASE_URL}/overallBookingSummary`, { fromDate, endDate });
+      return response.data.data; 
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to fetch overall booking summary'
+      );
+    }
+  }
+);
 const initialState = {
   list: [],
   list2: [],
+  list3:[],
   requestCount: 0,
   activeDeliveriesCount: 0,
   cancelledDeliveriesCount: 0,
@@ -432,6 +446,18 @@ const bookingSlice = createSlice({
       .addCase(rejectThridParty.fulfilled,(state,action)=>{
         state.loading=false;
         state.list2 = state.list2.filter(booking => booking.bookingId !== action.payload);
+      })
+      .addCase(fetchOverallBookingSummary.pending,(state)=>{
+        state.loading=true;
+        state.error=null
+      })
+      .addCase(fetchOverallBookingSummary.fulfilled,(state,action)=>{
+        state.loading=false;
+        state.list3=action.payload
+      })
+      .addCase(fetchOverallBookingSummary.rejected,(state,action)=>{
+        state.loading=false;
+        state.error=action.payload
       })
       ;
   }
