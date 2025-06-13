@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect,useState } from "react";
 import { Formik, Form, Field, FieldArray } from "formik";
 import {
   Box,
@@ -21,49 +21,70 @@ import { useNavigate } from "react-router-dom";
 
 
 const toPay = ['pay', 'paid', 'none'];
+const generateUniqueId = (prefix, existingSet, setFunction) => {
+  let newId;
+  do {
+    newId = prefix + Math.random().toString(36).substr(2, 6).toUpperCase();
+  } while (existingSet.has(newId));
 
-const initialValues = {
-  startStation: "",
-  endStation: "",
-  bookingDate: null,
-  deliveryDate: null,
-  customerSearch: "",
-  firstName: "",
-  middleName: "",
-  lastName: "",
-  mobile: "",
-  email: "",
-  senderName: "",
-  senderLocality: "",
-  fromCity: "",
-  senderGgt: "",
-  fromState: "",
-  senderPincode: "",
-  receiverName: "",
-  receiverLocality: "",
-  receiverGgt: "",
-  toState: "",
-  toCity: "",
-  toPincode: "",
-  items: [
-    {
-      receiptNo: "",
-      refNo: "",
-      insurance: "",
-      vppAmount: "",
-      toPayPaid: "",
-      weight: "",
-      amount: "",
-    },
-  ],
-  addComment: "",
-  freight: "",
-  ins_vpp: "",
-  billTotal: "",
-  cgst: "",
-  sgst: "",
-  igst: "",
-  grandTotal: "",
+  const updatedSet = new Set(existingSet);
+  updatedSet.add(newId);
+  setFunction(updatedSet);
+
+  return newId;
+};
+
+// Dummy setters for initial render
+const dummySet = new Set();
+const dummySetter = () => {};
+
+const generateInitialValues = () => {
+  const receiptNo = generateUniqueId("RCPT-", dummySet, dummySetter);
+  const refNo = generateUniqueId("REF-", dummySet, dummySetter);
+  
+  return {
+    startStation: "",
+    endStation: "",
+    bookingDate: null,
+    deliveryDate: null,
+    customerSearch: "",
+    firstName: "",
+    middleName: "",
+    lastName: "",
+    mobile: "",
+    email: "",
+    senderName: "",
+    senderLocality: "",
+    fromCity: "",
+    senderGgt: "",
+    fromState: "",
+    senderPincode: "",
+    receiverName: "",
+    receiverLocality: "",
+    receiverGgt: "",
+    toState: "",
+    toCity: "",
+    toPincode: "",
+    items: [
+      {
+        receiptNo: receiptNo,
+        refNo: refNo,
+        insurance: "",
+        vppAmount: "",
+        toPayPaid: "",
+        weight: "",
+        amount: "",
+      },
+    ],
+    addComment: "",
+    freight: "",
+    ins_vpp: "",
+    billTotal: "",
+    cgst: "",
+    sgst: "",
+    igst: "",
+    grandTotal: "",
+  };
 };
 const totalFields = [
   { name: "freight", label: "FREIGHT", readOnly: false },
@@ -76,26 +97,36 @@ const totalFields = [
 ];
 const calculateTotals = (values) => {
   const items = values.items || [];
-  const billTotal = items.reduce((sum, item) => sum + Number(item.amount || 0), 0);
 
+  const itemTotal = items.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const freight = Number(values.freight || 0);
   const ins_vpp = Number(values.ins_vpp || 0);
-  const cgst = Number(values.cgst || 0);
-  const sgst = Number(values.sgst || 0);
-  const igst = Number(values.igst || 0);
 
-  const grandTotal = billTotal + freight + ins_vpp + cgst + sgst + igst;
+  const billTotal = itemTotal + freight + ins_vpp; 
+
+  const cgst = (Number(values.cgst || 0) / 100) * billTotal;
+  const sgst = (Number(values.sgst || 0) / 100) * billTotal;
+  const igst = (Number(values.igst || 0) / 100) * billTotal;
+
+  const grandTotal = billTotal + cgst + sgst + igst;
 
   return {
     billTotal: billTotal.toFixed(2),
     grandTotal: grandTotal.toFixed(2),
-    computedTotalRevenue: grandTotal.toFixed(2)
+    computedTotalRevenue: grandTotal.toFixed(2),
+    cgst: cgst.toFixed(2),
+    sgst: sgst.toFixed(2),
+    igst: igst.toFixed(2),
   };
 };
+
+
 
 const BookingForm = () => {
   const [senderCities, setSenderCities] = React.useState([]);
   const [receiverCities, setReceiverCities] = React.useState([]);
+  const [generatedReceiptNos, setGeneratedReceiptNos] = useState(new Set());
+  const [generatedRefNos, setGeneratedRefNos] = useState(new Set());
 
   const dispatch = useDispatch();
   const { states, cities } = useSelector((state) => state.location);
@@ -110,10 +141,12 @@ const BookingForm = () => {
 
 
 
+
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Formik
-        initialValues={initialValues}
+
+        initialValues={generateInitialValues()}
         onSubmit={async (values, formikHelpers) => {
           try {
             await dispatch(createBooking(values)).unwrap();
@@ -491,8 +524,8 @@ const BookingForm = () => {
                           variant="contained"
                           onClick={() =>
                             push({
-                              receiptNo: "",
-                              refNo: "",
+                              receiptNo: generateUniqueId("RCPT-", generatedReceiptNos, setGeneratedReceiptNos),
+                              refNo: generateUniqueId("REF-", generatedRefNos, setGeneratedRefNos),
                               insurance: "",
                               vppAmount: "",
                               toPayPaid: "",
@@ -592,8 +625,6 @@ const EffectSyncTotals = ({ values, setFieldValue }) => {
     const totals = calculateTotals(values);
     setFieldValue("billTotal", totals.billTotal);
     setFieldValue("grandTotal", totals.grandTotal);
-    // Optional:
-    // setFieldValue("computedTotalRevenue", totals.computedTotalRevenue);
   }, [
     values.items,
     values.freight,
@@ -606,6 +637,8 @@ const EffectSyncTotals = ({ values, setFieldValue }) => {
 
   return null;
 };
+
+
 
 
 export default BookingForm;
