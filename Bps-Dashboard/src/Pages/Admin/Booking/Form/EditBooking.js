@@ -75,20 +75,26 @@ const totalFields = [
 ];
 const calculateTotals = (values) => {
   const items = values.items || [];
-  const billTotal = items.reduce((sum, item) => sum + Number(item.amount || 0), 0);
 
+  const itemTotal = items.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const freight = Number(values.freight || 0);
   const ins_vpp = Number(values.ins_vpp || 0);
-  const cgst = Number(values.cgst || 0);
-  const sgst = Number(values.sgst || 0);
-  const igst = Number(values.igst || 0);
 
-  const grandTotal = billTotal + freight + ins_vpp + cgst + sgst + igst;
+  const billTotal = itemTotal + freight + ins_vpp; 
+
+  const cgst = (Number(values.cgst || 0) / 100) * billTotal;
+  const sgst = (Number(values.sgst || 0) / 100) * billTotal;
+  const igst = (Number(values.igst || 0) / 100) * billTotal;
+
+  const grandTotal = billTotal + cgst + sgst + igst;
 
   return {
     billTotal: billTotal.toFixed(2),
     grandTotal: grandTotal.toFixed(2),
-    computedTotalRevenue: grandTotal.toFixed(2)
+    computedTotalRevenue: grandTotal.toFixed(2),
+    cgst: cgst.toFixed(2),
+    sgst: sgst.toFixed(2),
+    igst: igst.toFixed(2),
   };
 };
 const validationSchema = Yup.object().shape({
@@ -711,8 +717,6 @@ const EffectSyncTotals = ({ values, setFieldValue }) => {
     const totals = calculateTotals(values);
     setFieldValue("billTotal", totals.billTotal);
     setFieldValue("grandTotal", totals.grandTotal);
-    // Optional:
-    // setFieldValue("computedTotalRevenue", totals.computedTotalRevenue);
   }, [
     values.items,
     values.freight,
@@ -725,4 +729,5 @@ const EffectSyncTotals = ({ values, setFieldValue }) => {
 
   return null;
 };
+
 export default EditBooking;
