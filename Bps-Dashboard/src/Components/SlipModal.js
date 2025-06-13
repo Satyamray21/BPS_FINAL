@@ -146,13 +146,13 @@ const SlipModal = ({ open, handleClose, bookingData }) => {
                     <Box textAlign="center" mb={2}>
                         <Typography variant="h5" fontWeight="bold" color="primary">Bharat Parcel Services</Typography>
                         <Typography variant="subtitle2" color="text.secondary">
-                            {bookingData.startStation.address}
+                            {bookingData?.startStation?.address}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                            Ph: {bookingData.startStation.contact}
+                            Ph: {bookingData?.startStation?.contact}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                            GST: {bookingData.startStation.gst} | PAN: AAFCB1234R
+                            GST: {bookingData?.startStation?.gst} | PAN: AAFCB1234R
                         </Typography>
                     </Box>
 
