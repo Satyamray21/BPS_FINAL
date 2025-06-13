@@ -869,7 +869,8 @@ export const overallBookingSummary = async (req, res) => {
     const summary = await Booking.aggregate([
       {
         $match: {
-          isDelivered: true,
+          
+         
           bookingDate: {
             $gte: new Date(fromDate),
             $lte: new Date(endDate)
