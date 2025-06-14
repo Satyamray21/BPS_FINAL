@@ -870,7 +870,7 @@ export const overallBookingSummary = async (req, res) => {
       {
         $match: {
           
-         
+          isDelivered: true,
           bookingDate: {
             $gte: new Date(fromDate),
             $lte: new Date(endDate)
