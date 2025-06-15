@@ -7,12 +7,12 @@ const BASE_URL = 'http://localhost:8000/api/v2/delivery';
 
 export const assignDeliveries = createAsyncThunk(
   'delivery/assignDeliveries',
-  async ({ bookingIds, quotationIds, driverName, vehicleModel }, { rejectWithValue }) => {
+  async ({ bookingIds, quotationIds, driverId, vehicleModel }, { rejectWithValue }) => {
     try {
       const response = await axios.post(`${BASE_URL}/assign`, {
         bookingIds,
         quotationIds,
-        driverName,
+        driverId,
         vehicleModel, 
       });
       return response.data.data;
@@ -62,10 +62,36 @@ export const finalDeliveryWhatsApp = createAsyncThunk(
     }
   }
 )
+export const driverAvailabile = createAsyncThunk(
+  'driver/available',async(deliveryType,thunkApi)=>{
+    try{
+      const res = await axios.get(`${BASE_URL}/driver?type=${deliveryType}`)
+      return res.data.message;
+    }
+    catch(err)
+    {
+      return thunkApi.rejectWithValue(err.response?.message?.data);
+    }
+  }
+)
+export const VehicleAvailabile = createAsyncThunk(
+  'vehicle/available',async(deliveryType,thunkApi)=>{
+    try{
+      const res = await axios.get(`${BASE_URL}/vehicle?type=${deliveryType}`)
+      return res.data.message.availableVehicles;
+    }
+    catch(err)
+    {
+      return thunkApi.rejectWithValue(err.response?.message?.data);
+    }
+  }
+)
 const deliverySlice = createSlice({
   name: 'delivery',
   initialState: {
     deliveries: [],
+    driver:[],
+    vehicle:[],
     loading: false,
     error: null,
   },
@@ -119,6 +145,14 @@ const deliverySlice = createSlice({
       .addCase(finalDeliveryWhatsApp.rejected,(state,action)=>{
         state.loading=false;
         state.error=action.payload;
+      })
+      .addCase(driverAvailabile.fulfilled,(state,action)=>{
+        state.loading=false;
+        state.driver=action.payload
+      })
+      .addCase(VehicleAvailabile.fulfilled,(state,action)=>{
+        state.loading=false;
+        state.vehicle=action.payload
       })
       
       ;
