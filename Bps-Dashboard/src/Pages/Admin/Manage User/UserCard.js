@@ -163,7 +163,7 @@ const UserCard = () => {
   }
   const handleStatusChange = (adminId, action) => {
     dispatch(updateStatus({ adminId, action }));
-    window.location.reload();
+    
   };
   const filteredRows = userList.filter(
     row =>
@@ -256,17 +256,17 @@ const UserCard = () => {
                     <IconButton size="small" onClick={() => handleView(row.adminId)}><VisibilityIcon fontSize="small" /></IconButton>
                     <IconButton size="small" color="primary" onClick={() => handleEdit(row.adminId)}><EditIcon fontSize="small" /></IconButton>
                     <IconButton size="small" color="error" onClick={() => handleDelete(row.adminId)}><DeleteIcon fontSize="small" /></IconButton>
-                    <IconButton size="small" onClick={e => handleMenuOpen(e, row.id)}><MoreVertIcon fontSize="small" /></IconButton>
+                    <IconButton size="small" onClick={e => handleMenuOpen(e, row.adminId)}><MoreVertIcon fontSize="small" /></IconButton>
                     <Menu anchorEl={menuAnchorEl} open={Boolean(menuAnchorEl)} onClose={handleMenuClose} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} transformOrigin={{ vertical: 'top', horizontal: 'right' }} PaperProps={{ elevation: 3, sx: { borderRadius: 2, minWidth: 180, mt: 1 } }}>
-                      <MenuItem onClick={() => handleStatusChange(row.adminId, 'available')}>
+                      <MenuItem onClick={() => handleStatusChange(menuRowId, 'available')}>
                         <ListItemIcon><CheckCircleIcon sx={{ color: 'green' }} fontSize="small" /></ListItemIcon>
                         <ListItemText primary="Active" />
                       </MenuItem>
-                      <MenuItem onClick={() => handleStatusChange(row.adminId, 'deactivated')}>
+                      <MenuItem onClick={() => handleStatusChange(menuRowId, 'deactivated')}>
                         <ListItemIcon><CancelIcon sx={{ color: 'orange' }} fontSize="small" /></ListItemIcon>
                         <ListItemText primary="Inactive" />
                       </MenuItem>
-                      <MenuItem onClick={() => handleStatusChange(row.adminId, 'blacklisted')}>
+                      <MenuItem onClick={() => handleStatusChange(menuRowId, 'blacklisted')}>
                         <ListItemIcon><BlockIcon sx={{ color: 'red' }} fontSize="small" /></ListItemIcon>
                         <ListItemText primary="Blacklisted" />
                       </MenuItem>
