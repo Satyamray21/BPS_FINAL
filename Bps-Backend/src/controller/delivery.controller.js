@@ -121,6 +121,7 @@ export const getAvailableVehicles = asyncHandler(async (req, res) => {
 
 
 export const assignDelivery = asyncHandler(async (req, res) => {
+  console.log("Req",req.body);
   const { bookingIds = [], quotationIds = [], driverId, vehicleModel } = req.body;
 
   if ((!bookingIds.length && !quotationIds.length) || !driverId || !vehicleModel) {
@@ -309,7 +310,7 @@ export const listQuotationDeliveries = asyncHandler(async (req, res) => {
 });
 
 export const finalizeDelivery = asyncHandler(async (req, res) => {
-  const { orderId } = req.params; // Getting orderId from params
+  const { orderId } = req.params;
 
   const delivery = await Delivery.findOne({ orderId });
 
@@ -321,21 +322,55 @@ export const finalizeDelivery = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Delivery is already finalized.");
   }
 
-  // Mark as "Final Delivery"
+  // Step 1: Mark as final
   delivery.status = "Final Delivery";
   await delivery.save();
 
-  // Set activeDelivery to false for both Booking and Quotation types
+  // Step 2: Mark Booking or Quotation as completed
   if (delivery.deliveryType === "Booking" && delivery.bookingId) {
-    await Booking.updateOne({ bookingId: delivery.bookingId }, { activeDelivery: false,isDelivered: true  });
+    await Booking.updateOne(
+      { bookingId: delivery.bookingId },
+      { activeDelivery: false, isDelivered: true }
+    );
   }
 
   if (delivery.deliveryType === "Quotation" && delivery.quotationId) {
-    await Quotation.updateOne({ bookingId: delivery.quotationId }, { activeDelivery: false,isDelivered: true  });
+    await Quotation.updateOne(
+      { bookingId: delivery.quotationId },
+      { activeDelivery: false, isDelivered: true }
+    );
   }
 
-  // Update availability
-  await updateDriverAndVehicleAvailability(delivery.driverName, delivery.vehicleModel);
+  // Step 3: Check for other active deliveries for the same driver/vehicle
+  const activeDeliveries = await Delivery.find({
+    status: { $nin: ["Completed", "Final Delivery"] },
+    $or: [
+      { driverId: delivery.driverId },
+      { vehicleModel: delivery.vehicleModel },
+    ]
+  });
+
+  // Step 4: If no active deliveries left for driver or vehicle, mark them as available
+  const hasDriverActive = activeDeliveries.some(
+    d => d.driverId === delivery.driverId
+  );
+  const hasVehicleActive = activeDeliveries.some(
+    d => d.vehicleModel?.toString() === delivery.vehicleModel?.toString()
+  );
+
+  if (!hasDriverActive && delivery.driverId) {
+    await Driver.updateOne(
+      { driverId: delivery.driverId },
+      { isAvailable: true }
+    );
+  }
+
+  if (!hasVehicleActive && delivery.vehicleModel) {
+    await Vehicle.updateOne(
+      { _id: delivery.vehicleModel },
+      { isAvailable: true }
+    );
+  }
 
   res.status(200).json(
     new ApiResponse(200, {
@@ -344,6 +379,7 @@ export const finalizeDelivery = asyncHandler(async (req, res) => {
     }, "Delivery marked as final.")
   );
 });
+
 
 export const sendDeliverySuccessEmail = async (email, booking) => {
   const {
