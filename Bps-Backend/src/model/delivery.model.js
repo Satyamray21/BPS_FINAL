@@ -12,7 +12,7 @@ const deliverySchema = new mongoose.Schema({
   quotationId: { type: String }, // ✅ changed from ObjectId
   deliveryType: { type: String, enum: ["Booking", "Quotation"], required: true },
 
-  driverName: {
+  driverId: {
     type: String,
     required: true,
   },
