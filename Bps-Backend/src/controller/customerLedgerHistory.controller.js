@@ -7,6 +7,14 @@ import { Customer } from "../model/customer.model.js";
  * Preview invoices based on customer and date range
  * This does NOT mark invoices as generated.
  */
+const formatDate = (dateString) => {
+  if (!dateString) return null;
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
+};
 export const previewInvoices = async (req, res) => {
    // Include full end date
 
@@ -60,9 +68,9 @@ finalEndDate.setHours(23, 59, 59, 999);
         sno: index + 1,
         bookingId: order.bookingId,
         date: order.bookingDate
-  ? new Date(order.bookingDate).toLocaleDateString("en-CA")
+  ? formatDate(order.bookingDate)
   : order.quotationDate
-  ? new Date(order.quotationDate).toLocaleDateString("en-CA")
+  ? formatDate(order.quotationDate)
   : "",
 
         pickupLocation: order.startStation?.stationName || "",
@@ -195,9 +203,9 @@ export const getAllInvoices = async (req, res) => {
         invoiceId,
         bookingId: invoice.bookingId,
         date:invoice.bookingDate
-  ? new Date(invoice.bookingDate).toLocaleDateString("en-CA")
+  ? formatDate(invoice.bookingDate)
   : invoice.quotationDate
-  ? new Date(invoice.quotationDate).toLocaleDateString("en-CA")
+  ? formatDate(invoice.quotationDate)
   : "",
         name: customerName,
         order: invoice.bookingDate ? "Booking" : "Quotation",
