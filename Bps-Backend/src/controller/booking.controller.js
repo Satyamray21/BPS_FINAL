@@ -50,6 +50,15 @@ const getBookingFilterByType = (type, user) => {
   return baseFilter;
 };
 
+const formatDate = (dateString) => {
+  if (!dateString) return null;
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
+};
+
 
 export const viewBooking = async (req, res) => {
   try {
@@ -70,12 +79,9 @@ export const viewBooking = async (req, res) => {
       lastName: booking.lastName,
       mobile: booking.mobile,
       email: booking.email,
-      bookingDate: booking.bookingDate
-  ? new Date(booking.bookingDate).toLocaleDateString('en-CA')
-  : null,
-deliveryDate: booking.deliveryDate
-  ? new Date(booking.deliveryDate).toLocaleDateString('en-CA')
-  : null,
+      bookingDate: booking.bookingDate ? formatDate(booking.bookingDate) : null,
+      deliveryDate: booking.deliveryDate ? formatDate(booking.deliveryDate) : null,
+
       senderName: booking.senderName,
       senderGgt: booking.senderGgt,
       fromState: booking.fromState,
@@ -546,9 +552,14 @@ export const getBookingStatusList = async (req, res) => {
     const data = validBookings.map((b, i) => ({
       SNo: i + 1,
       orderBy:
-    b.requestedByRole === 'public'
-      ? 'Third Party'
-      : `${b.createdByRole} ${b.startStation?.stationName || ''}` || 'N/A',
+  b.requestedByRole === 'public'
+    ? 'Third Party'                                          
+    : b.createdByRole === 'admin'
+      ? 'Admin'                                               
+      : b.createdByRole === 'supervisor'
+        ? `Supervisor (${b.startStation?.stationName || 'N/A'})` 
+        : `${b.createdByRole} ${b.startStation?.stationName || ''}`.trim() || 'N/A',
+
      date: b.bookingDate ? new Date(b.bookingDate).toLocaleDateString('en-CA') : 'N/A',
 
       fromName: b.senderName || 'N/A',
