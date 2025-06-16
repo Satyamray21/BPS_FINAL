@@ -343,21 +343,21 @@ const DriverCard = () => {
                                                         },
                                                     }}
                                                 >
-                                                    <MenuItem onClick={() => handleStatusChange('Active')}>
+                                                    <MenuItem onClick={() => handleStatusChange('Active',menuDriverId)}>
                                                         <ListItemIcon>
                                                             <CheckCircleIcon sx={{ color: 'green' }} fontSize="small" />
                                                         </ListItemIcon>
                                                         <ListItemText primary="Active" />
                                                     </MenuItem>
 
-                                                    <MenuItem onClick={() => handleStatusChange('Inactive')}>
+                                                    <MenuItem onClick={() => handleStatusChange('Inactive',menuDriverId)}>
                                                         <ListItemIcon>
                                                             <CancelIcon sx={{ color: 'orange' }} fontSize="small" />
                                                         </ListItemIcon>
                                                         <ListItemText primary="Inactive" />
                                                     </MenuItem>
 
-                                                    <MenuItem onClick={() => handleStatusChange('Blacklisted')}>
+                                                    <MenuItem onClick={() => handleStatusChange('Blacklisted',menuDriverId)}>
                                                         <ListItemIcon>
                                                             <BlockIcon sx={{ color: 'red' }} fontSize="small" />
                                                         </ListItemIcon>
