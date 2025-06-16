@@ -8,9 +8,11 @@ import { Customer } from "../model/customer.model.js";
  * This does NOT mark invoices as generated.
  */
 export const previewInvoices = async (req, res) => {
+   // Include full end date
+
   try {
     const { emailId, contactNumber, orderType, fromDate, endDate } = req.body;
-
+    console.log("Req",req.body);
     const customerQuery = emailId ? { emailId } : { mobile: contactNumber };
     const customer = await Customer.findOne(customerQuery);
     if (!customer) {
@@ -18,7 +20,10 @@ export const previewInvoices = async (req, res) => {
     }
 
     const startDate = new Date(fromDate);
-    const finalEndDate = new Date(endDate);
+startDate.setHours(0, 0, 0, 0); // Include full start date
+
+const finalEndDate = new Date(endDate);
+finalEndDate.setHours(23, 59, 59, 999);
     let orders = [];
 
     if (orderType === "Booking") {
