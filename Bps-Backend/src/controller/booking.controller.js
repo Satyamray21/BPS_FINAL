@@ -560,7 +560,7 @@ export const getBookingStatusList = async (req, res) => {
         ? `Supervisor (${b.startStation?.stationName || 'N/A'})` 
         : `${b.createdByRole} ${b.startStation?.stationName || ''}`.trim() || 'N/A',
 
-     date: b.bookingDate ? new Date(b.bookingDate).toLocaleDateString('en-CA') : 'N/A',
+     date: b.bookingDate ? formatDate(b.bookingDate) : 'N/A',
 
       fromName: b.senderName || 'N/A',
       pickup: b.startStation?.stationName || 'N/A',
