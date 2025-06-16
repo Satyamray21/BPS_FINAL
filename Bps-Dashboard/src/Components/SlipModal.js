@@ -137,6 +137,27 @@ const SlipModal = ({ open, handleClose, bookingData }) => {
         freight, ins_vpp, cgst, sgst, igst, grandTotal, items, endStation,
         senderName, receiverName,contact
     } = bookingData;
+    const billTotal = Number(bookingData?.billTotal || 0);
+const insVpp = Number(bookingData?.ins_vpp || 0);
+
+const cgstPercent = Number(bookingData?.cgst || 0);
+const sgstPercent = Number(bookingData?.sgst || 0);
+const igstPercent = Number(bookingData?.igst || 0);
+
+
+const calculatedCGST = +(billTotal * cgstPercent / 100).toFixed(2);
+const calculatedSGST = +(billTotal * sgstPercent / 100).toFixed(2);
+const calculatedIGST = +(billTotal * igstPercent / 100).toFixed(2);
+
+
+const calculatedGrandTotal = +(
+  billTotal +
+  calculatedCGST +
+  calculatedSGST +
+  calculatedIGST +
+  insVpp
+).toFixed(2);
+
 
     return (
         <Modal open={open} onClose={handleClose}>
@@ -187,11 +208,12 @@ const SlipModal = ({ open, handleClose, bookingData }) => {
                         </Typography>
                         <Grid container spacing={1}>
                             {[
+                                ['Bill Total', formatCurrency(billTotal)],
                                 ['Freight', formatCurrency(freight)],
                                 ['Insurance/VPP', formatCurrency(ins_vpp)],
-                                ['CGST (9%)', formatCurrency(cgst)],
-                                ['SGST (9%)', formatCurrency(sgst)],
-                                ['IGST', formatCurrency(igst)],
+                                ['CGST (9%)', formatCurrency(calculatedCGST)],
+                                ['SGST (9%)', formatCurrency(calculatedSGST)],
+                                ['IGST', formatCurrency(calculatedIGST)],
                             ].map(([label, value], i) => (
                                 <React.Fragment key={i}>
                                     <Grid size={{ xs: 6 }}><Typography sx={labelStyle}>{label}:</Typography></Grid>
