@@ -59,6 +59,8 @@ const CustomerCard = ({ onSelect }) => {
   const [orderBy, setOrderBy] = useState('name');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [menuAnchorEl, setMenuAnchorEl] = useState(null);
+const [selectedCustomerId, setSelectedCustomerId] = useState(null);
 
   const { list: customerList, activeCount, blacklistCount } = useSelector(state => state.customers);
 
@@ -109,25 +111,33 @@ const CustomerCard = ({ onSelect }) => {
 
   const emptyRows = Math.max(0, (1 + page) * rowsPerPage - filteredCustomers.length);
 
-  const handleClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
+  const handleClick = (event, customerId) => {
+  setMenuAnchorEl(event.currentTarget);
+  setSelectedCustomerId(customerId);
+};
 
-  const handleClose = (option) => {
-    setAnchorEl(null);
-    if (option) {
-      onSelect(option);
-    }
-  };
+const handleClose = () => {
+  setMenuAnchorEl(null);
+  setSelectedCustomerId(null);
+};
 
-  const handleStatusActivate = (customerId) => {
-    dispatch(updateStatusActivate(customerId));
+
+  const handleStatusActivate = () => {
+  if (selectedCustomerId) {
+    dispatch(updateStatusActivate(selectedCustomerId));
+    handleClose(); 
+    window.location.reload(); 
+  }
+};
+
+const handleStatusBacklist = () => {
+  if (selectedCustomerId) {
+    dispatch(updateStatusBacklist(selectedCustomerId));
+    handleClose(); 
     window.location.reload();
   }
-  const handleStatusBacklist = (customerId) => {
-    dispatch(updateStatusBacklist(customerId));
-    window.location.reload();
-  }
+};
+
   return (
     <Box sx={{ p: 3 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
@@ -239,13 +249,13 @@ const CustomerCard = ({ onSelect }) => {
                         <DeleteIcon fontSize="small" />
                       </IconButton>
 
-                      <IconButton size="small" title="More options" onClick={handleClick}>
+                      <IconButton size="small" title="More options" onClick={(e)=>handleClick(e,row.customerId)}>
                         <MoreVertIcon fontSize="small" />
                       </IconButton>
                       <Menu
-                        anchorEl={anchorEl}
-                        open={Boolean(anchorEl)}
-                        onClose={() => handleClose()}
+                        anchorEl={menuAnchorEl}
+                        open={Boolean(menuAnchorEl)}
+                        onClose={ handleClose}
                         anchorOrigin={{
                           vertical: 'bottom',
                           horizontal: 'left',
@@ -262,13 +272,13 @@ const CustomerCard = ({ onSelect }) => {
                           }
                         }}
                       >
-                        <MenuItem onClick={() => handleStatusActivate(row.customerId)}>
+                        <MenuItem onClick={ handleStatusActivate}>
                           <ListItemIcon>
                             <CheckCircleIcon sx={{ color: 'green' }} fontSize="small" />
                           </ListItemIcon>
                           <ListItemText primary="Active" />
                         </MenuItem>
-                        <MenuItem onClick={() => handleStatusBacklist(row.customerId)}>
+                        <MenuItem onClick={ handleStatusBacklist}>
                           <ListItemIcon>
                             <BlockIcon sx={{ color: 'red' }} fontSize="small" />
                           </ListItemIcon>
