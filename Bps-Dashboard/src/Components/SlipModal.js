@@ -22,7 +22,7 @@ const style = {
 const labelStyle = { color: '#666', fontWeight: 500 };
 const valueStyle = { color: '#222', fontWeight: 600, fontFamily: 'monospace' };
 const formatCurrency = (amount) => `₹${Number(amount || 0).toFixed(2)}`;
-const formatDate = (dateStr) => dateStr ? new Date(dateStr).toLocaleDateString() : 'N/A';
+
 
 const SlipModal = ({ open, handleClose, bookingData }) => {
     if (!bookingData) return null;
@@ -85,7 +85,7 @@ const SlipModal = ({ open, handleClose, bookingData }) => {
           ${[
                 ['Ref No', bookingData?.items?.[0]?.refNo || bookingData?.bookingId],
                 ['Receipt No', bookingData?.items?.[0]?.receiptNo || 'N/A'],
-                ['Date', formatDate(bookingData?.bookingDate)],
+                ['Date', bookingData?.bookingDate],
                 ['From', bookingData?.fromCity],
                 ['To', bookingData?.endStation?.stationName || bookingData?.toCity],
                 ['Sender', bookingData?.senderName || bookingData?.firstName],
@@ -186,7 +186,7 @@ const calculatedGrandTotal = +(
                             {[
                                 ['Ref No', items?.[0]?.refNo || bookingId],
                                 ['Receipt No', items?.[0]?.receiptNo || 'N/A'],
-                                ['Date', formatDate(bookingDate)],
+                                ['Date', bookingDate],
                                 ['From', fromCity],
                                 ['To', endStation?.stationName || toCity],
                                 ['Sender', senderName || firstName],
