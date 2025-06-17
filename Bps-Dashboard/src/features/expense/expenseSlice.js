@@ -72,6 +72,18 @@ export const updateByInvoiceNo = createAsyncThunk(
     }
     
 )
+export const deleteExpenseByInvoiceNo = createAsyncThunk(
+    'deleteExpense/invoiceNo', async(invoiceNo,thunkApi)=>{
+        try{
+            const res = await axios.delete(`${BASE_URL}/expense/invoiceNo`)
+            return invoiceNo;
+        }
+        catch(err)
+        {
+            return thunkApi.rejectWithValue(err?.response?.data?.message || 'Failed to delete data');
+        }
+    }
+)
 const initialState = {
     list: [],
     form: {
@@ -189,6 +201,10 @@ const expenseSlice = createSlice(
                 .addCase(updateByInvoiceNo.rejected,(state,action)=>{
                     state.loading=null;
                     state.error=action.payload;
+                })
+                .addCase(deleteExpenseByInvoiceNo.fulfilled,(state,action)=>{
+                     state.loading = false;
+        state.list = state.list.filter(expense =>expense.invoiceNo !== action.payload);
                 })
         }
     }
