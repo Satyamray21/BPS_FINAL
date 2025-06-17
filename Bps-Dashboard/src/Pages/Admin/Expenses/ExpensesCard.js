@@ -36,7 +36,8 @@ import {
     getAllExpenses,
     viewedExpenseById,
     clearViewedExpenses,
-    updateByInvoiceNo
+    updateByInvoiceNo,
+    deleteExpenseByInvoiceNo
 } from '../../../features/expense/expenseSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
@@ -76,7 +77,12 @@ const ExpensesCard = () => {
             dispatch(clearViewedExpenses());
         };
     }, [invoiceNo, dispatch]);
-
+   const handleDelete = (invoiceNo) =>{
+    if (window.confirm("Are you sure you want to delete this customer ?"))
+    {
+         dispatch(deleteExpenseByInvoiceNo(invoiceNo));
+    }
+   }
     const filteredExpenses = expenses.filter(exp => {
         if (!exp || !exp.name) return false;
         return exp.name.toLowerCase().includes(searchExpense.toLowerCase());
@@ -302,7 +308,8 @@ const ExpensesCard = () => {
                                                 <EditIcon fontSize="small" />
                                             </IconButton>
                                             <IconButton size="small" color="error">
-                                                <DeleteIcon fontSize="small" />
+                                                <DeleteIcon fontSize="small" 
+                                                onClick={()=>handleDelete(expense.invoiceNo)}/>
                                             </IconButton>
                                         </Box>
                                     </TableCell>
