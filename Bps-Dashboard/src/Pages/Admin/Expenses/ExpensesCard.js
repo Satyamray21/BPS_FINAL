@@ -78,7 +78,7 @@ const ExpensesCard = () => {
         };
     }, [invoiceNo, dispatch]);
    const handleDelete = (invoiceNo) =>{
-    if (window.confirm("Are you sure you want to delete this customer ?"))
+    if (window.confirm("Are you sure you want to delete this Expense ?"))
     {
          dispatch(deleteExpenseByInvoiceNo(invoiceNo));
     }
