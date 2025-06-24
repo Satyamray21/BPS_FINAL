@@ -12,7 +12,8 @@ import * as Yup from "yup";
 import { useDispatch, useSelector } from "react-redux";
 import { addVehicles } from '../../../../features/vehicle/vehicleSlice'
 import { useNavigate } from 'react-router-dom'
-
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
 const years = Array.from(
     { length: 30 },
     (_, i) => new Date().getFullYear() - i
@@ -42,7 +43,13 @@ const validationSchema = Yup.object({
         Yup.ref("policyStartDate"),
         "End date must be after start date"
     ),
-    policyPremium: Yup.number().required("Required"),
+    policyPremium: Yup.number()
+  .transform((value, originalValue) =>
+    String(originalValue).trim() === "" ? NaN : Number(originalValue)
+  )
+  .typeError("Policy premium must be a number")
+  .required("Required"),
+
 
     lastFitnessRenewalDate: Yup.date().required("Required"),
     currentFitnessValidUpto: Yup.date().required("Required").min(
@@ -63,7 +70,11 @@ const validationSchema = Yup.object({
 const VehicleForm = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-
+    const [snackbar, setSnackbar] = React.useState({
+            open: false,
+            message: '',
+            severity: 'error'  // or 'success', 'info', etc.
+          });
     const formik = useFormik({
         initialValues: {
             registrationNumber: "",
@@ -103,8 +114,12 @@ const VehicleForm = () => {
                 await dispatch(addVehicles(values)).unwrap();
                 formik.resetForm();
                 navigate('/vehicle');
-            } catch (error) {
-                console.log("Error while creating Vehicle", error);
+            }catch (errorMessage) {
+  setSnackbar({
+    open: true,
+    message: errorMessage, // already extracted from backend
+    severity: 'error'
+  });
             }
         }
 
@@ -367,12 +382,15 @@ const VehicleForm = () => {
                     </Grid>
                     <Grid size={{ xs: 12, sm: 4 }}>
                         <TextField
-                            label="Policy Premium"
-                            name="policyPremium"
-                            fullWidth
-                            value={formik.values.policyPremium}
-                            onChange={formik.handleChange}
-                        />
+  label="Policy Premium"
+  name="policyPremium"
+  fullWidth
+  value={formik.values.policyPremium}
+  onChange={formik.handleChange}
+  error={formik.touched.policyPremium && Boolean(formik.errors.policyPremium)}
+  helperText={formik.touched.policyPremium && formik.errors.policyPremium}
+/>
+
                     </Grid>
                 </Grid>
 
@@ -480,6 +498,22 @@ const VehicleForm = () => {
                     >
                         Submit
                     </Button>
+                    <Snackbar
+                                                          open={snackbar.open}
+                                                          autoHideDuration={6000}
+                                                          onClose={() => setSnackbar({ ...snackbar, open: false })}
+                                                          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+                                                        >
+                                                          <MuiAlert
+                                                            onClose={() => setSnackbar({ ...snackbar, open: false })}
+                                                            severity={snackbar.severity}
+                                                            sx={{ width: '100%' }}
+                                                            elevation={6}
+                                                            variant="filled"
+                                                          >
+                                                              {snackbar.message}
+                                                          </MuiAlert>
+                                                        </Snackbar>
                 </Box>
             </form>
         </Box>

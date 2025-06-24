@@ -1,4 +1,6 @@
 import React, { useEffect } from 'react';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import {
@@ -27,6 +29,11 @@ const DriverForm = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { states, cities } = useSelector((state) => state.location);
+    const [snackbar, setSnackbar] = React.useState({
+        open: false,
+        message: '',
+        severity: 'error'  // or 'success', 'info', etc.
+      });
     // Validation Schema
     const validationSchema = Yup.object().shape({
         firstName: Yup.string().required('First Name is required'),
@@ -77,10 +84,15 @@ const DriverForm = () => {
                 formik.resetForm();
                 navigate('/driver')
             }
-            catch (error) {
-                console.log("Error while adding driver", error);
+            catch (errorMessage) {
+  setSnackbar({
+    open: true,
+    message: errorMessage, // already extracted from backend
+    severity: 'error'
+  });
             }
-        }
+        },
+        
     });
     useEffect(() => {
         dispatch(fetchStates());
@@ -434,6 +446,22 @@ const DriverForm = () => {
                             >
                                 Submit Registration
                             </Button>
+                            <Snackbar
+                                      open={snackbar.open}
+                                      autoHideDuration={6000}
+                                      onClose={() => setSnackbar({ ...snackbar, open: false })}
+                                      anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+                                    >
+                                      <MuiAlert
+                                        onClose={() => setSnackbar({ ...snackbar, open: false })}
+                                        severity={snackbar.severity}
+                                        sx={{ width: '100%' }}
+                                        elevation={6}
+                                        variant="filled"
+                                      >
+                                          {snackbar.message}
+                                      </MuiAlert>
+                                    </Snackbar>
                         </Grid>
                     </Grid>
                 </form>
