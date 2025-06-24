@@ -5,21 +5,50 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 // Create Station
 const createManageStation = asyncHandler(async (req, res) => {
-  
-  const { stationName, contact, emailId, address, state, city, pincode,gst } = req.body;
+  const { stationName, contact, emailId, address, state, city, pincode, gst } = req.body;
 
-  if ([stationName, contact, emailId, address, state, city, pincode].some(field => typeof field === 'string' && field.trim() === "")) {
-    throw new ApiError(400, "All fields are compulsory");
+  // Validate each field
+  if (!stationName || stationName.trim() === "") {
+    throw new ApiError(400, "Station name is required");
+  }
+  if (!contact || contact.trim() === "") {
+    throw new ApiError(400, "Contact number is required");
+  }
+  if (!emailId || emailId.trim() === "") {
+    throw new ApiError(400, "Email ID is required");
+  }
+  if (!address || address.trim() === "") {
+    throw new ApiError(400, "Address is required");
+  }
+  if (!state || state.trim() === "") {
+    throw new ApiError(400, "State is required");
+  }
+  if (!city || city.trim() === "") {
+    throw new ApiError(400, "City is required");
+  }
+  if (!pincode || pincode.trim() === "") {
+    throw new ApiError(400, "Pincode is required");
+  }
+  if (!gst || gst.trim() === "") {
+    throw new ApiError(400, "GST number is required");
   }
 
+  // Check for duplicates
   const existedStation = await manageStation.findOne({
-    $or: [{ stationName }, { emailId }]
+    $or: [{ stationName }, { emailId }, { gst }, { contact }]
   });
 
   if (existedStation) {
-    throw new ApiError(401, "Please provide unique email and stationName");
+    let conflictField = '';
+    if (existedStation.stationName === stationName) conflictField = "Station name already exists";
+    else if (existedStation.emailId === emailId) conflictField = "Email ID already registered";
+    else if (existedStation.gst === gst) conflictField = "GST number already registered";
+    else if (existedStation.contact === contact) conflictField = "Contact number already registered";
+
+    throw new ApiError(409, conflictField || "Duplicate station entry");
   }
 
+  // Create station
   const station = await manageStation.create({
     stationName,
     emailId,
@@ -33,13 +62,14 @@ const createManageStation = asyncHandler(async (req, res) => {
 
   const createdStation = await manageStation.findById(station._id);
   if (!createdStation) {
-    throw new ApiError(402, "Something went wrong, Please try again");
+    throw new ApiError(500, "Something went wrong, please try again");
   }
 
   return res.status(200).json(
-    new ApiResponse(201, "Station created Successfully", createdStation)
+    new ApiResponse(201, "Station created successfully", createdStation)
   );
 });
+
 
 // Get All Stations
 const getAllStations = asyncHandler(async (req, res) => {

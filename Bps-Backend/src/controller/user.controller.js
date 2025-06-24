@@ -7,24 +7,24 @@ import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import bcrypt from "bcrypt"
 // Register a new user
-export const registerUser = asyncHandler(async (req, res) => {
+import mongoose from 'mongoose';
 
+export const registerUser = asyncHandler(async (req, res) => {
   try {
     if (req.body.role === 'admin' && req.body.isBlacklisted === true) {
       throw new ApiError(400, "Admin users cannot be blacklisted");
     }
-    let userData = { ...req.body };
 
+    let userData = { ...req.body };
 
     if (req.files) {
       if (req.files['idProofPhoto']) {
-        userData.idProofPhoto = req.files['idProofPhoto'][0].path; // File path
+        userData.idProofPhoto = req.files['idProofPhoto'][0].path;
       }
       if (req.files['adminProfilePhoto']) {
-        userData.adminProfilePhoto = req.files['adminProfilePhoto'][0].path; // File path
+        userData.adminProfilePhoto = req.files['adminProfilePhoto'][0].path;
       }
     }
-
 
     if (!userData.idProofPhoto || !userData.adminProfilePhoto) {
       throw new ApiError(400, "Both idProofPhoto and adminProfilePhoto are required.");
@@ -32,12 +32,22 @@ export const registerUser = asyncHandler(async (req, res) => {
 
     const user = new User(userData);
     await user.save();
+
     res.status(201).json(new ApiResponse(201, "User registered successfully", user));
   } catch (error) {
-    console.log("error message", error.message);
+    console.log("Error:", error);
+
+    // Handle MongoDB Duplicate Key Error
+    if (error.code === 11000) {
+      const duplicateField = Object.keys(error.keyPattern)[0];
+      const message = `${duplicateField.charAt(0).toUpperCase() + duplicateField.slice(1)} already exists.`;
+      throw new ApiError(400, message);
+    }
+
     throw new ApiError(400, "Registration failed", error.message);
   }
 });
+
 export const loginUser = asyncHandler(async (req, res) => {
   try {
     const { emailId, password } = req.body;

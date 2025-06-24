@@ -3,15 +3,19 @@ import mongoose from "mongoose";
 const manageStationSchema = new mongoose.Schema({
     stationName:{
         type:String,
-        required:true
+        required:true,
+        unique:true,
     },
     contact:{
         type:String,
-        required:true
+        required:true,
+        unique:true,
+
     },
     emailId:{
         type:String,
-        required:true
+        required:true,
+        unique:true,
     },
     address:{
         type:String,
@@ -31,7 +35,8 @@ const manageStationSchema = new mongoose.Schema({
     },
     gst:{
         type:String,
-        required:true
+        required:true,
+        unique:true,
     },
     stationId: {
         type: String,
