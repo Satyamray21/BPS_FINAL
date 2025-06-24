@@ -6,7 +6,6 @@ import fs from "fs/promises";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import bcrypt from "bcrypt"
-// Register a new user
 import mongoose from 'mongoose';
 
 export const registerUser = asyncHandler(async (req, res) => {
