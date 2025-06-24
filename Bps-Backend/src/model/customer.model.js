@@ -14,7 +14,9 @@ const customerSchema = new mongoose.Schema({
         required: true
     },
     contactNumber: {
-        type: Number
+        type: Number,
+        unique:true,
+        required:true
     },
     emailId: {
         type: String,
@@ -56,7 +58,7 @@ const customerSchema = new mongoose.Schema({
     },
     gstNumber:{
         type:String,
-        required:true
+        
     },
     customerId: {
         type: String,

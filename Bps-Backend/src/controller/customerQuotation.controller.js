@@ -5,13 +5,20 @@ import nodemailer from 'nodemailer';
 import Quotation from "../model/customerQuotation.model.js";
 import { Customer } from "../model/customer.model.js";
 import manageStation from "../model/manageStation.model.js";
-
+const formatDate = (dateString) => {
+  if (!dateString) return null;
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
+};
 const formatQuotations = (quotations) => {
   return quotations.map((q, index) => ({
     "S.No.": index + 1,
     "Booking ID": q.bookingId,
     "orderBy": `${q.createdByRole} ${q.startStation?.stationName || ''}`,
-    "Date":q.quotationDate.toLocaleDateString('en-CA'),
+    "Date":formatDate(q.quotationDate),
     "Name": q.customerId
       ? `${q.customerId.firstName} ${q.customerId.lastName}`
       : `${q.firstName || ""} ${q.lastName || ""}`.trim(),
@@ -272,8 +279,7 @@ export const searchQuotationByBookingId = asyncHandler(async (req, res, next) =>
   if (!quotation) {
     return next(new ApiError(404, "Quotation not found with the provided Booking ID"));
   }
-  const formatDate = (date) =>
-    new Date(date).toLocaleDateString("en-CA");
+  
 
   if (quotation.quotationDate) {
     quotation.quotationDate = formatDate(quotation.quotationDate); 

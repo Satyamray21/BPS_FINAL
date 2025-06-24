@@ -24,7 +24,6 @@ const formatCustomerList = (customers) => {
 
 // CREATE Customer
 export const createCustomer = asyncHandler(async (req, res) => {
-  
   const {
     firstName,
     middleName,
@@ -43,7 +42,11 @@ export const createCustomer = asyncHandler(async (req, res) => {
   } = req.body;
 
   // Validate required fields
-  if ([firstName, lastName, emailId, address, state, city, idProof].some(field => typeof field === "string" && field.trim() === "")) {
+  if (
+    [firstName, lastName, emailId, address, state, city, idProof].some(
+      (field) => typeof field === "string" && field.trim() === ""
+    )
+  ) {
     throw new ApiError(400, "All required fields must be provided.");
   }
 
@@ -51,36 +54,55 @@ export const createCustomer = asyncHandler(async (req, res) => {
   const existingCustomer = await Customer.findOne({ emailId });
   if (existingCustomer) {
     return res.status(400).json({ message: "Email is already registered." });
-
   }
 
-  // Handle file uploads
+  // Check for existing ID Proof
+  const existingIdProof = await Customer.findOne({ idProof });
+  if (existingIdProof) {
+    return res.status(400).json({ message: "ID Proof is already registered." });
+  }
+
+  // File uploads
   const idProofPhoto = req.files?.idProofPhoto?.[0]?.path || null;
   const customerProfilePhoto = req.files?.customerProfilePhoto?.[0]?.path || null;
 
-  // Create new customer
-  const customer = await Customer.create({
-    firstName,
-    middleName,
-    lastName,
-    contactNumber,
-    emailId,
-    address,
-    district,
-    state,
-    city,
-    idProof,
-    status,
-    isBlacklisted,
-    idProofPhoto,
-    customerProfilePhoto,
-    pincode,
-    gstNumber,
-    createdBy: req.user._id,
-  });
+  try {
+    const customer = await Customer.create({
+      firstName,
+      middleName,
+      lastName,
+      contactNumber,
+      emailId,
+      address,
+      district,
+      state,
+      city,
+      idProof,
+      status,
+      isBlacklisted,
+      idProofPhoto,
+      customerProfilePhoto,
+      pincode,
+      gstNumber,
+      createdBy: req.user._id,
+    });
 
+    return res
+      .status(201)
+      .json(new ApiResponse(201, "Customer created successfully", customer));
+  } catch (err) {
+    
+    if (err.code === 11000) {
+      const field = Object.keys(err.keyPattern)[0];
+      return res
+        .status(400)
+        .json({ message: `${field === 'idProof' ? 'ID Proof' : field} is already registered.` });
+    }
 
-  return res.status(201).json(new ApiResponse(201, "Customer created successfully", customer));
+    
+    console.error("Error while saving customer:", err);
+    throw new ApiError(500, "Something went wrong while saving the customer.");
+  }
 });
 
 // GET All Customers
