@@ -1,4 +1,4 @@
-import { Driver } from "../model/driver.model.js";
+import  {Driver}  from "../model/driver.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -22,60 +22,79 @@ const formatDriverList = (drivers) => {
 
 // Create Driver
 export const createDriver = asyncHandler(async (req, res) => {
-    const {
-        firstName,
-        middleName,
-        lastName,
-        contactNumber,
-        emailId,
-        password,
-        address,
-        pincode,
-        district,
-        state,
-        city,
-        dlNumber,
-        idProof,
-        isAvailable,
-        isBlacklisted
-    } = req.body;
+  const {
+    firstName,
+    middleName,
+    lastName,
+    contactNumber,
+    emailId,
+    password,
+    address,
+    pincode,
+    district,
+    state,
+    city,
+    dlNumber,
+    idProof,
+    isAvailable,
+    isBlacklisted,
+  } = req.body;
 
-    if ([firstName, lastName, emailId, password, address, state, city, dlNumber, idProof]
-        .some(field => typeof field === "string" && field.trim() === "")) {
-        throw new ApiError(400, "All required fields must be provided.");
-    }
-    const idProofPhoto = req.files?.idProofPhoto?.[0]?.path || null;
-    const driverProfilePhoto = req.files?.driverProfilePhoto?.[0]?.path || null;
+  // Validate required string fields
+  if (
+    [firstName, lastName, emailId, password, address, state, city, dlNumber, idProof].some(
+      (field) => typeof field === "string" && field.trim() === ""
+    )
+  ) {
+    throw new ApiError(400, "All required fields must be provided.");
+  }
 
-    const existingDriver = await Driver.findOne({ emailId });
-    if (existingDriver) {
-        throw new ApiError(409, "Email is already registered.");
-    }
+  // File validations
+  const idProofPhoto = req.files?.idProofPhoto?.[0]?.path || null;
+  const driverProfilePhoto = req.files?.driverProfilePhoto?.[0]?.path || null;
 
+  if (!idProofPhoto || !driverProfilePhoto) {
+    throw new ApiError(400, "Both idProofPhoto and driverProfilePhoto are required.");
+  }
+
+  try {
     const driver = await Driver.create({
-        firstName,
-        middleName,
-        lastName,
-        contactNumber,
-        emailId,
-        password,
-        address,
-        district,
-        state,
-        city,
-        dlNumber,
-        idProof,
-        idProofPhoto,
-        driverProfilePhoto,
-        pincode,
-        isBlacklisted: isBlacklisted === "true" || isBlacklisted === true,
-        isAvailable: isAvailable === "true" || isAvailable === true,
-        createdBy: req.user._id,
+      firstName,
+      middleName,
+      lastName,
+      contactNumber,
+      emailId,
+      password,
+      address,
+      district,
+      state,
+      city,
+      dlNumber,
+      idProof,
+      idProofPhoto,
+      driverProfilePhoto,
+      pincode,
+      isBlacklisted: isBlacklisted === "true" || isBlacklisted === true,
+      isAvailable: isAvailable === "true" || isAvailable === true,
+      createdBy: req.user._id,
     });
 
-   
     return res.status(201).json(new ApiResponse(201, "Driver created successfully", driver));
+  } catch (error) {
+    // Handle MongoDB duplicate key error
+    if (error.code === 11000 && error.keyPattern) {
+      const duplicateField = Object.keys(error.keyPattern)[0]; // e.g. emailId, idProof, dlNumber
+      const fieldName =
+        duplicateField.charAt(0).toUpperCase() + duplicateField.slice(1);
+      throw new ApiError(409, `${fieldName} already exists.`);
+    }
+
+    // Other errors
+    console.error("Driver creation error:", error);
+    throw new ApiError(400, "Driver registration failed", error.message);
+  }
 });
+
 
 // Get All Drivers (Formatted forntend data )
 export const getAllDrivers = asyncHandler(async (req, res) => {

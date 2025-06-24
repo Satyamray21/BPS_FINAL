@@ -16,75 +16,85 @@ const formatVehicleDetails = (vehicles) => {
 
 // CREATE Vehicle
 export const createVehicle = asyncHandler(async (req, res) => {
-  
-  const {
-    registrationDate,
-    regExpiryDate,
-    vehicleModel,
-    registrationNumber,
-    manufactureYear,
-    ownedBy,
-    currentLocation,
-    dateofPurchase,
-    purchasedFrom,
-    PurchasedUnder,
-    purchasePrice,
-    depreciation,
-    currentValue,
-    currentInsuranceProvider,
-    policyNumber,
-    policyType,
-    policyStartDate,
-    policyEndDate,
-    policyPremium,
-    lastFitnessRenewalDate,
-    currentFitnessValidUpto,
-    firstRegValidUpto,
-    renewalDate,
-    renewalValidUpto,
-    addcomment,
-  } = req.body;
+  try {
+    const {
+      registrationDate,
+      regExpiryDate,
+      vehicleModel,
+      registrationNumber,
+      manufactureYear,
+      ownedBy,
+      currentLocation,
+      dateofPurchase,
+      purchasedFrom,
+      PurchasedUnder,
+      purchasePrice,
+      depreciation,
+      currentValue,
+      currentInsuranceProvider,
+      policyNumber,
+      policyType,
+      policyStartDate,
+      policyEndDate,
+      policyPremium,
+      lastFitnessRenewalDate,
+      currentFitnessValidUpto,
+      firstRegValidUpto,
+      renewalDate,
+      renewalValidUpto,
+      addcomment,
+    } = req.body;
 
-  if (!vehicleModel || !ownedBy || !registrationNumber || !currentLocation) {
-    throw new ApiError(
-      400,
-      "vehicleModel, ownedBy, registrationNumber, and currentLocation are required"
-    );
+    const vehicle = await Vehicle.create({
+      registrationDate,
+      regExpiryDate,
+      vehicleModel,
+      registrationNumber,
+      manufactureYear,
+      ownedBy,
+      currentLocation,
+      dateofPurchase,
+      purchasedFrom,
+      PurchasedUnder,
+      purchasePrice,
+      depreciation,
+      currentValue,
+      currentInsuranceProvider,
+      policyNumber,
+      policyType,
+      policyStartDate,
+      policyEndDate,
+      policyPremium,
+      lastFitnessRenewalDate,
+      currentFitnessValidUpto,
+      firstRegValidUpto,
+      renewalDate,
+      renewalValidUpto,
+      addcomment,
+      createdBy: req.user._id,
+    });
+
+    return res
+      .status(201)
+      .json(new ApiResponse(201, "Vehicle created successfully", vehicle));
+  } catch (error) {
+    // Handle Mongoose validation errors
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors).map((err) => err.message);
+      throw new ApiError(400, `Validation failed: ${messages.join(", ")}`);
+    }
+
+    // Handle duplicate key error (code: 11000)
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
+      throw new ApiError(400, `Duplicate entry: ${field} already exists.`);
+    }
+
+    // Fallback for other errors
+    throw new ApiError(500, "Something went wrong while creating the vehicle.");
   }
-
-  const vehicle = await Vehicle.create({
-    registrationDate,
-    regExpiryDate,
-    vehicleModel,
-    registrationNumber,
-    manufactureYear,
-    ownedBy,
-    currentLocation,
-    dateofPurchase,
-    purchasedFrom,
-    PurchasedUnder,
-    purchasePrice,
-    depreciation,
-    currentValue,
-    currentInsuranceProvider,
-    policyNumber,
-    policyType,
-    policyStartDate,
-    policyEndDate,
-    policyPremium,
-    lastFitnessRenewalDate,
-    currentFitnessValidUpto,
-    firstRegValidUpto,
-    renewalDate,
-    renewalValidUpto,
-    addcomment,
-    createdBy: req.user._id,
-  });
-
-  return res
-    .status(201)
-    .json(new ApiResponse(201, "Vehicle created successfully", vehicle));
 });
+
 
 // GET All Vehicles
 export const getAllVehicles = asyncHandler(async (req, res) => {

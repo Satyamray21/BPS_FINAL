@@ -62,7 +62,8 @@ const VehicleSchema = new mongoose.Schema({
   },
   policyNumber: {
     type: String,
-    required: true
+    required: true,
+    unique:true
   },
   policyType: {
     type: String,
