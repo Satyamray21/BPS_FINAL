@@ -12,7 +12,12 @@ const formatCustomerList = (customers) => {
     contactNumber: customer.contactNumber,
     firstName: customer.firstName,
     lastName:customer.lastName,
-    emailId:customer.emailId
+    emailId:customer.emailId,
+    address:customer.address,
+    gstNumber:customer.gstNumber,
+    state:customer.state,
+    city:customer.city,
+    pincode:customer.pincode,
 
   }));
 };
@@ -45,7 +50,8 @@ export const createCustomer = asyncHandler(async (req, res) => {
   // Check for existing email
   const existingCustomer = await Customer.findOne({ emailId });
   if (existingCustomer) {
-    throw new ApiError(409, "Email is already registered.");
+    return res.status(400).json({ message: "Email is already registered." });
+
   }
 
   // Handle file uploads
