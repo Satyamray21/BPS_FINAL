@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
 import { useFormik } from 'formik';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
 import * as Yup from 'yup';
 import {
   Box, Button, Grid, TextField, InputAdornment, Dialog,
@@ -14,7 +16,11 @@ import { createStation,fetchStations } from '../../../../features/stations/stati
 const StationForm = ({ open, onClose }) => {
   const dispatch = useDispatch();
   const { states, cities } = useSelector((state) => state.location);
-
+  const [snackbar, setSnackbar] = React.useState({
+    open: false,
+    message: '',
+    severity: 'error'  // or 'success', 'info', etc.
+  });
 
   const validationSchema = Yup.object().shape({
     stationName: Yup.string().required('Station name is required'),
@@ -47,10 +53,15 @@ const StationForm = ({ open, onClose }) => {
         await dispatch(fetchStations());
         formik.resetForm();
         onClose();
-      } catch (err) {
-        console.error('Error creating station:', err);
-      }
-    },
+      } catch (errorMessage) {
+  setSnackbar({
+    open: true,
+    message: errorMessage, // already extracted from backend
+    severity: 'error'
+  });
+}
+}
+    
     
   });
 
@@ -266,6 +277,22 @@ const StationForm = ({ open, onClose }) => {
         >
           Save Station
         </Button>
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        >
+          <MuiAlert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            severity={snackbar.severity}
+            sx={{ width: '100%' }}
+            elevation={6}
+            variant="filled"
+          >
+              {snackbar.message}
+          </MuiAlert>
+        </Snackbar>
       </DialogActions>
     </Dialog>
   );

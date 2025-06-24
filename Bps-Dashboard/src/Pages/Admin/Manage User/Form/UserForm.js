@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
 import { useFormik } from 'formik';
 import {
     Box,
@@ -49,7 +51,11 @@ const UserForm = () => {
     const [showPassword, setShowPassword] = useState(false);
 
     const handleClickShowPassword = () => setShowPassword((prev) => !prev);
-
+    const [snackbar, setSnackbar] = React.useState({
+    open: false,
+    message: '',
+    severity: 'error'  // or 'success', 'info', etc.
+  });
     const formik = useFormik({
         initialValues: {
             firstName: "",
@@ -75,8 +81,12 @@ const UserForm = () => {
                 await dispatch(createUsers(values)).unwrap();
                 formik.resetForm();
                 navigate('/users');
-            } catch (error) {
-                console.log("Error while adding User", error);
+            } catch (errorMessage) {
+  setSnackbar({
+    open: true,
+    message: errorMessage, // already extracted from backend
+    severity: 'error'
+  });
             }
         },
     });
@@ -349,6 +359,22 @@ const UserForm = () => {
                         <Button variant="contained" color="primary" type="submit" size="large">
                             Submit
                         </Button>
+                         <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        >
+          <MuiAlert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            severity={snackbar.severity}
+            sx={{ width: '100%' }}
+            elevation={6}
+            variant="filled"
+          >
+              {snackbar.message}
+          </MuiAlert>
+        </Snackbar>
                     </Grid>
                 </Grid>
             </form>
