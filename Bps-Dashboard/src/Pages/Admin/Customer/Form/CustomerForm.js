@@ -1,4 +1,7 @@
 import React, { useEffect } from 'react';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
+
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import {
@@ -26,6 +29,11 @@ const CustomerForm = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { states, cities } = useSelector((state) => state.location);
+ const [snackbar, setSnackbar] = React.useState({
+  open: false,
+  message: '',
+  severity: 'error'  // or 'success', 'info', etc.
+});
 
   // Validation Schema
   const validationSchema = Yup.object().shape({
@@ -75,8 +83,16 @@ const CustomerForm = () => {
         navigate('/customer')
       }
       catch (error) {
-        console.log("Error while adding customer", error);
-      }
+  console.error("Error while adding customer", error);
+    const errMsg = error?.message || "Something went wrong while adding the customer.";
+
+  setSnackbar({
+    open: true,
+    message: errMsg,
+    severity: 'error'
+  });
+}
+
     }
   });
   useEffect(() => {
@@ -401,6 +417,23 @@ const CustomerForm = () => {
               >
                 Submit Registration
               </Button>
+              <Snackbar
+  open={snackbar.open}
+  autoHideDuration={6000}
+  onClose={() => setSnackbar({ ...snackbar, open: false })}
+  anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+>
+  <MuiAlert
+    onClose={() => setSnackbar({ ...snackbar, open: false })}
+    severity={snackbar.severity}
+    sx={{ width: '100%' }}
+    elevation={6}
+    variant="filled"
+  >
+    {snackbar.message}
+  </MuiAlert>
+</Snackbar>
+
             </Grid>
           </Grid>
         </form>

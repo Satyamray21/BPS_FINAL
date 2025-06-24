@@ -21,7 +21,10 @@ export const createCustomer = createAsyncThunk(
 
       return response.data.message;
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+      return rejectWithValue({
+  message: err.response?.data?.message || err.message,
+});
+
     }
   }
 );
