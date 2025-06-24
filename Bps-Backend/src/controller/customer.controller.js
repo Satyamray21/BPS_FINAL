@@ -32,6 +32,7 @@ export const createCustomer = asyncHandler(async (req, res) => {
     city,
     idProof,
     pincode,
+    gstNumber,
     status = "active",
     isBlacklisted = false,
   } = req.body;
@@ -68,6 +69,7 @@ export const createCustomer = asyncHandler(async (req, res) => {
     idProofPhoto,
     customerProfilePhoto,
     pincode,
+    gstNumber,
     createdBy: req.user._id,
   });
 

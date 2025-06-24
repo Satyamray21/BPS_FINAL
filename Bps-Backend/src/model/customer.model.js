@@ -54,10 +54,15 @@ const customerSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    gstNumber:{
+        type:String,
+        required:true
+    },
     customerId: {
         type: String,
         unique: true
     },
+
     status: {
         type: String,
         enum: ["active", "inactive"],
