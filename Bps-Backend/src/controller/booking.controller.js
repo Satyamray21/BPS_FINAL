@@ -920,5 +920,49 @@ export const overallBookingSummary = async (req, res) => {
   }
 };
 
+export const getBookingSummaryByDate = async (req, res) => {
+  try {
+    const { fromDate, toDate } = req.body;
+    const user = req.user; // Assume user is attached via auth middleware
+
+    if (!fromDate || !toDate) {
+      return res.status(400).json({ message: "Both fromDate and toDate are required" });
+    }
+
+    const from = new Date(fromDate);
+    const to = new Date(toDate);
+    to.setHours(23, 59, 59, 999);
+
+    // Build query
+    const query = {
+      bookingDate: { $gte: from, $lte: to }
+    };
+
+    // Add role-based access
+    if (user.role === "supervisor") {
+      query.createdByUser = user._id;
+    }
+
+    const bookings = await Booking.find(query).sort({ bookingDate: -1 });
+
+    
+    const bookingSummaries = bookings.map((booking) => ({
+      ...booking.toObject(),
+      itemsCount: booking.items?.length || 0,
+    }));
+
+    res.status(200).json({
+      message: `Bookings from ${fromDate} to ${toDate}`,
+      total: bookingSummaries.length,
+      bookings: bookingSummaries,
+    });
+  } catch (error) {
+    console.error("Error fetching bookings by date:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+
+
 
 

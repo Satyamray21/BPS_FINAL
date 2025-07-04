@@ -19,7 +19,8 @@ import {
   rejectThirdPartyBookingRequest,
   sendBookingEmailById,
   customerWiseData,
-  overallBookingSummary
+  overallBookingSummary,
+  getBookingSummaryByDate
 } from '../controller/booking.controller.js';
 
 import { parseFormData } from "../middleware/multerParser.middleware.js";
@@ -41,7 +42,8 @@ router.get('/overallBookingSummary',overallBookingSummary)
 router.post('/public', createPublicBooking);
 router.get("/pending", verifyJwt, getPendingThirdPartyBookings);
 router.patch("/:bookingId/approve", verifyJwt, approveThirdPartyBookingRequest);
-router.post('/', verifyJwt, createBooking);           // Create a new booking
+router.post('/', verifyJwt, createBooking);          
+router.get('/booking-summary',verifyJwt,getBookingSummaryByDate);
 router.patch('/:id/activate', activateBooking);
 router.patch('/:bookingId/cancel', cancelBooking);
 router.get('/:id', viewBooking);           // View by bookingId (not _id!)

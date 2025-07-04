@@ -212,10 +212,24 @@ export const fetchOverallBookingSummary = createAsyncThunk(
     }
   }
 );
+export const getBookingSummaryByDate = createAsyncThunk(
+  'booking/getBookingSummary', async(_,thunkApi)=>{
+    try{
+      const res = await axios.get(`${BASE_URL}/booking-summary`);
+      return res.data.bookings;
+    }
+    catch(err)
+    {
+      return thunkApi.rejectWithValue(err.response?.data?.message || 'Failed to fetch data');
+    }
+    
+  }
+)
 const initialState = {
   list: [],
   list2: [],
   list3:[],
+  list4:[],
   requestCount: 0,
   activeDeliveriesCount: 0,
   cancelledDeliveriesCount: 0,
@@ -458,6 +472,10 @@ const bookingSlice = createSlice({
       .addCase(fetchOverallBookingSummary.rejected,(state,action)=>{
         state.loading=false;
         state.error=action.payload
+      })
+      .addCase(getBookingSummaryByDate.fulfilled,(state,action)=>{
+        state.loading=false;
+        state.list4=action.payload;
       })
       ;
   }
