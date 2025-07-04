@@ -213,9 +213,9 @@ export const fetchOverallBookingSummary = createAsyncThunk(
   }
 );
 export const getBookingSummaryByDate = createAsyncThunk(
-  'booking/getBookingSummary', async(_,thunkApi)=>{
+  'booking/getBookingSummary', async({fromDate, endDate},thunkApi)=>{
     try{
-      const res = await axios.get(`${BASE_URL}/booking-summary`);
+      const res = await axios.get(`${BASE_URL}/booking-summary`,{ fromDate, endDate });
       return res.data.bookings;
     }
     catch(err)
