@@ -16,7 +16,8 @@ import {
   RequestBookingList,
   updateQuotationStatus,
   sendBookingEmail,
-  sendBookingEmailById
+  sendBookingEmailById,
+  getBookingSummaryByDate
 
 } from "../controller/customerQuotation.controller.js";
 import { parseFormData } from "../middleware/multerParser.middleware.js";
@@ -50,6 +51,8 @@ router.get("/revenue-list", verifyJwt, getRevenue)
 router.get("/send-Booking-Email/:bookingId", sendBookingEmailById)
 
 router.get("/booking-request-list", verifyJwt, RequestBookingList)
+
+router.get("/booking-summary-date",verifyJwt,getBookingSummaryByDate)
 
 router.patch("/status/:bookingId", updateQuotationStatus);
 // Route to get a single quotation by its ID

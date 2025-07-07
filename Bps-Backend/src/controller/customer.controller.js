@@ -57,11 +57,7 @@ export const createCustomer = asyncHandler(async (req, res) => {
   }
 
   // Check for existing ID Proof
-  const existingIdProof = await Customer.findOne({ idProof });
-  if (existingIdProof) {
-    return res.status(400).json({ message: "ID Proof is already registered." });
-  }
-
+ 
   // File uploads
   const idProofPhoto = req.files?.idProofPhoto?.[0]?.path || null;
   const customerProfilePhoto = req.files?.customerProfilePhoto?.[0]?.path || null;
@@ -92,12 +88,7 @@ export const createCustomer = asyncHandler(async (req, res) => {
       .json(new ApiResponse(201, "Customer created successfully", customer));
   } catch (err) {
     
-    if (err.code === 11000) {
-      const field = Object.keys(err.keyPattern)[0];
-      return res
-        .status(400)
-        .json({ message: `${field === 'idProof' ? 'ID Proof' : field} is already registered.` });
-    }
+    
 
     
     console.error("Error while saving customer:", err);
