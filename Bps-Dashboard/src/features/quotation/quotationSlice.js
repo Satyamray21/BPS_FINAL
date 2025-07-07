@@ -141,8 +141,22 @@ export const sendWhatsAppMsg = createAsyncThunk(
     }
   }
 )
+export const getBookingSummaryByDate = createAsyncThunk(
+  'booking/getBookingSummary', async({fromDate, endDate},thunkApi)=>{
+    try{
+      const res = await axios.post(`${BASE_URL}/booking-summary-date`,{ fromDate, toDate });
+      return res.data.bookings;
+    }
+    catch(err)
+    {
+      return thunkApi.rejectWithValue(err.response?.data?.message || 'Failed to fetch data');
+    }
+    
+  }
+)
 const initialState = {
   list: [],
+  list2:[],
   requestCount: 0,
   activeDeliveriesCount: 0,
   cancelledDeliveriesCount: 0,
@@ -327,6 +341,10 @@ const quotationSlice = createSlice({
         state.loading=false;
         state.error=action.payload
       })
+      .addCase(getBookingSummaryByDate.fulfilled,(state,action)=>{
+              state.loading=false;
+              state.list2=action.payload;
+            })
 
   }
 })
