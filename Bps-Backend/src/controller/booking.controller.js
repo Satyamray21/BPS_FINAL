@@ -6,6 +6,7 @@ import { User } from '../model/user.model.js'
 import {sendBookingConfirmation} from './whatsappController.js'
 import {sendWhatsAppMessage} from '../services/whatsappServices.js'
 import {ApiResponse} from "../utils/ApiResponse.js"
+import { generateInvoicePDF } from '../utils/invoiceGenerator.js'; 
 async function resolveStation(name) {
   const station = await Station.findOne({ stationName: new RegExp(`^${name}$`, 'i') });
   if (!station) throw new Error(`Station "${name}" not found`);
@@ -1158,6 +1159,93 @@ export const getCADetailsSummary = async (req, res) => {
     res.status(500).json(
       new ApiResponse(500, null, "Server error while generating summary")
     );
+  }
+};
+
+
+
+
+export const generateInvoiceByCustomer = async (req, res) => {
+  try {
+    const { customerName, fromDate, toDate } = req.body;
+
+    if (!customerName || !fromDate || !toDate) {
+      return res.status(400).json({
+        message: "customerName, fromDate, and toDate are required",
+        data: { customerName, fromDate, toDate }
+      });
+    }
+
+    // Step 1: Find Customer
+    const customer = await Customer.findOne({
+  $or: [
+    {
+      $expr: {
+        $regexMatch: {
+          input: { $concat: ["$firstName", "$middleName", "$lastName"] },
+          regex: customerName,
+          options: "i"
+        }
+      }
+    }
+  ]
+});
+
+
+    if (!customer) {
+      return res.status(404).json({
+        message: "Customer not found",
+        customerSearchTerm: customerName,
+      });
+    }
+
+    // Step 2: Find Bookings
+    const from = new Date(fromDate);
+    const to = new Date(toDate);
+    to.setHours(23, 59, 59, 999); // end of day
+
+    const bookings = await Booking.find({
+      customerId: customer._id,
+      bookingDate: { $gte: from, $lte: to },
+    }).sort({ bookingDate: 1 });
+
+    if (!bookings.length) {
+      // Fetch all bookings for debugging in API response
+      const allBookings = await Booking.find({ customerId: customer._id }).sort({ bookingDate: 1 });
+
+      return res.status(404).json({
+        message: "No bookings found in the given date range",
+        customer: {
+          id: customer._id,
+          name: `${customer.firstName} ${customer.lastName}`,
+        },
+        requestedDateRange: {
+          from: from.toISOString(),
+          to: to.toISOString(),
+        },
+        availableBookingsDates: allBookings.map(b => ({
+          id: b._id,
+          date: b.bookingDate,
+          billTotal: b.billTotal,
+          receiverName: b.receiverName
+        })),
+      });
+    }
+
+    // Step 3: Generate PDF
+    const pdfBuffer = await generateInvoicePDF(customer, bookings);
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${customer.firstName}_Invoice.pdf"`,
+    });
+
+    res.send(pdfBuffer);
+  } catch (err) {
+    res.status(500).json({
+      message: err.message || "Server Error",
+      error: true
+    });
   }
 };
 

@@ -20,7 +20,9 @@ import {
   sendBookingEmailById,
   customerWiseData,
   overallBookingSummary,
-  getBookingSummaryByDate
+  getBookingSummaryByDate,
+  getCADetailsSummary,
+  generateInvoiceByCustomer,
 } from '../controller/booking.controller.js';
 
 import { parseFormData } from "../middleware/multerParser.middleware.js";
@@ -37,7 +39,10 @@ router.post('/send-booking-email', sendBookingEmail);
 router.post('/send-booking-email/:bookingId', sendBookingEmailById);
 router.patch('/reject/:bookingId',rejectThirdPartyBookingRequest);
 router.get('/summary',customerWiseData);
-router.get('/overallBookingSummary',overallBookingSummary)
+router.get('/overallBookingSummary',overallBookingSummary);
+router.post('/ca-report',getCADetailsSummary);
+router.post('/invoice', generateInvoiceByCustomer);
+
 //  CRUD routes AFTER static routes
 router.post('/public', createPublicBooking);
 router.get("/pending", verifyJwt, getPendingThirdPartyBookings);
