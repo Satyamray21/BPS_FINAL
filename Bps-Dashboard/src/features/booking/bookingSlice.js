@@ -225,11 +225,24 @@ export const getBookingSummaryByDate = createAsyncThunk(
     
   }
 )
+export const caReport = createAsyncThunk(
+  'booking/caReport',async ({pickup,drop,fromDate,toDate},thunkApi)=>{
+    try{
+      const response = await axios.post(`${BASE_URL}/ca-report`,{pickup,drop,fromDate,toDate});
+      return response.data.data.summary;
+    }
+    catch(err)
+    {
+      return thunkApi.rejectWithValue(err.response?.data?.message || 'Failed to fetch Ca Report');
+    }
+  }
+)
 const initialState = {
   list: [],
   list2: [],
   list3:[],
   list4:[],
+  list5:[],
   requestCount: 0,
   activeDeliveriesCount: 0,
   cancelledDeliveriesCount: 0,
@@ -476,6 +489,18 @@ const bookingSlice = createSlice({
       .addCase(getBookingSummaryByDate.fulfilled,(state,action)=>{
         state.loading=false;
         state.list4=action.payload;
+      })
+      .addCase(caReport.pending,(state)=>{
+        state.loading=true;
+        state.error=null;
+      })
+      .addCase(caReport.fulfilled,(state,action)=>{
+        state.loading=false;
+        state.list5=action.payload;
+      })
+      .addCase(caReport.rejected,(state,action)=>{
+        state.loading=false;
+        state.error=action.payload;
       })
       ;
   }
