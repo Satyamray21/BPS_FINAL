@@ -924,7 +924,7 @@ export const overallBookingSummary = async (req, res) => {
 export const getBookingSummaryByDate = async (req, res) => {
   try {
     const { fromDate, toDate } = req.body;
-    const user = req.user; // Assume user is attached via auth middleware
+    const user = req.user;
 
     if (!fromDate || !toDate) {
       return res.status(400).json({ message: "Both fromDate and toDate are required" });
@@ -934,32 +934,67 @@ export const getBookingSummaryByDate = async (req, res) => {
     const to = new Date(toDate);
     to.setHours(23, 59, 59, 999);
 
-    // Build query
     const query = {
       bookingDate: { $gte: from, $lte: to }
     };
 
-    // Add role-based access
     if (user.role === "supervisor") {
       query.createdByUser = user._id;
     }
 
     const bookings = await Booking.find(query).sort({ bookingDate: -1 });
 
-    
-    const bookingSummaries = bookings.map((booking) => ({
-      ...booking.toObject(),
-      itemsCount: booking.items?.length || 0,
-    }));
+    // Transform bookings to include detailed payment breakdown
+    const transformedBookings = bookings.map(booking => {
+      const paidItems = booking.items.filter(item => item.toPay === "paid");
+      const toPayItems = booking.items.filter(item => item.toPay === "pay");
+      
+      const paidAmount = paidItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+      const toPayAmount = toPayItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+
+      return {
+        ...booking.toObject(),
+        // New payment fields
+        paid: paidAmount,
+        toPay: toPayAmount,
+        // Existing fields
+        paidAmount, // Keeping for backward compatibility
+        toPayAmount, // Keeping for backward compatibility
+        itemsCount: booking.items?.length || 0,
+        // Additional calculated fields
+        paymentStatus: paidAmount > 0 ? (toPayAmount > 0 ? "Partial" : "Paid") : "Unpaid"
+      };
+    });
+
+    // Calculate comprehensive summary
+    const summary = {
+      totalPaid: transformedBookings.reduce((sum, b) => sum + b.paid, 0),
+      totalToPay: transformedBookings.reduce((sum, b) => sum + b.toPay, 0),
+      totalBookings: transformedBookings.length,
+      paidBookings: transformedBookings.filter(b => b.paid > 0 && b.toPay === 0).length,
+      unpaidBookings: transformedBookings.filter(b => b.paid === 0).length,
+      partialBookings: transformedBookings.filter(b => b.paid > 0 && b.toPay > 0).length
+    };
 
     res.status(200).json({
       message: `Bookings from ${fromDate} to ${toDate}`,
-      total: bookingSummaries.length,
-      bookings: bookingSummaries,
+      summary: {
+        ...summary,
+        grandTotal: summary.totalPaid + summary.totalToPay,
+        paymentBreakdown: {
+          fullyPaid: summary.paidBookings,
+          partiallyPaid: summary.partialBookings,
+          unpaid: summary.unpaidBookings
+        }
+      },
+      bookings: transformedBookings
     });
   } catch (error) {
     console.error("Error fetching bookings by date:", error);
-    res.status(500).json({ message: "Server Error" });
+    res.status(500).json({ 
+      message: "Server Error",
+      error: error.message 
+    });
   }
 };
 
